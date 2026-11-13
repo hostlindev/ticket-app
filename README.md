@@ -21,6 +21,8 @@ La identidad de **Pixi** está centralizada para poder cambiarla sin tocar la UI
 - Node `^22.18.0 || >=24.12.0`
 - pnpm
 
+##  update
+
 ## Setup
 
 ```sh
