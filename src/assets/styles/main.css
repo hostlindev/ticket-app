@@ -1,0 +1,343 @@
+/*
+ * Tailwind is loaded as a utilities layer only:
+ * Vuetify owns component styling, Tailwind gives us the aesthetic layer
+ * (pixel grids, playful shadows, blobs, animations) that Vuetify does not cover.
+ * Preflight is intentionally NOT imported so it cannot reset Vuetify internals.
+ */
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+:root,
+html[data-palette="celeste"] {
+  --color-accent-100: #e0f2fe;
+  --color-accent-200: #bae6fd;
+  --color-accent-300: #7dd3fc;
+  --color-accent-400: #38bdf8;
+  --color-accent-500: #0ea5e9;
+  --color-accent-600: #0284c7;
+  --color-accent-700: #0369a1;
+  --shadow-accent: #7dd3fc;
+}
+
+html[data-palette="azul"] {
+  --color-accent-100: #dbeafe;
+  --color-accent-200: #bfdbfe;
+  --color-accent-300: #93c5fd;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-accent-700: #1d4ed8;
+  --shadow-accent: #93c5fd;
+}
+
+html[data-palette="verde"] {
+  --color-accent-100: #d1fae5;
+  --color-accent-200: #a7f3d0;
+  --color-accent-300: #6ee7b7;
+  --color-accent-400: #34d399;
+  --color-accent-500: #10b981;
+  --color-accent-600: #059669;
+  --color-accent-700: #047857;
+  --shadow-accent: #6ee7b7;
+}
+
+html[data-palette="naranja"] {
+  --color-accent-100: #ffedd5;
+  --color-accent-200: #fed7aa;
+  --color-accent-300: #fdba74;
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+  --color-accent-700: #c2410c;
+  --shadow-accent: #fdba74;
+}
+
+html[data-palette="rojo"] {
+  --color-accent-100: #fee2e2;
+  --color-accent-200: #fecaca;
+  --color-accent-300: #fca5a5;
+  --color-accent-400: #f87171;
+  --color-accent-500: #ef4444;
+  --color-accent-600: #dc2626;
+  --color-accent-700: #b91c1c;
+  --shadow-accent: #fca5a5;
+}
+
+html[data-palette="rosado"] {
+  --color-accent-100: #fce7f3;
+  --color-accent-200: #fbcfe8;
+  --color-accent-300: #f472b6;
+  --color-accent-400: #ec4899;
+  --color-accent-500: #db2777;
+  --color-accent-600: #be185d;
+  --color-accent-700: #9d174d;
+  --shadow-accent: #f472b6;
+}
+
+@theme {
+  --font-sans: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-pixel: "Pixelify Sans", "Nunito", system-ui, sans-serif;
+  --font-mono: "Pixelify Sans", "Nunito", monospace;
+
+  /* Paleta Plateada y Acero */
+  --color-silver-50: #f8fafc;
+  --color-silver-100: #ebf1f6;
+  --color-silver-200: #e2e8f0;
+  --color-silver-300: #cbd5e1;
+  --color-silver-400: #94a3b8;
+  --color-silver-500: #64748b;
+
+  /* Tinta de alto contraste */
+  --color-ink-900: #1e293b;
+  --color-ink-700: #334155;
+  --color-ink-500: #64748b;
+
+  /* Acento activo dinámico */
+  --color-accent-100: var(--color-accent-100);
+  --color-accent-200: var(--color-accent-200);
+  --color-accent-300: var(--color-accent-300);
+  --color-accent-400: var(--color-accent-400);
+  --color-accent-500: var(--color-accent-500);
+  --color-accent-600: var(--color-accent-600);
+  --color-accent-700: var(--color-accent-700);
+
+  /* Acentos de estado */
+  --color-cyan-400: #2dd4bf;
+  --color-amber-400: #f59e0b;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-silver-100);
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+::selection {
+  background: var(--color-accent-200);
+  color: var(--color-ink-900);
+}
+
+/* ---------------------------------------------------------------------------
+ * Modern Developer Console Primitives (Clean & Ergonomic)
+ * ------------------------------------------------------------------------ */
+/* En capa "components" para que las utilidades de Tailwind (border-l-4, etc.) puedan sobrescribirlas. */
+@layer components {
+  .console-card {
+    background: #ffffff;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px 0 rgb(30 41 59 / 0.04);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .console-card:hover {
+    border-color: rgb(203 213 225);
+  }
+
+  .console-card-interactive {
+    background: #ffffff;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px 0 rgb(30 41 59 / 0.04);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .console-card-interactive:hover {
+    border-color: var(--color-accent-400);
+    box-shadow: 0 4px 14px -2px rgb(30 41 59 / 0.08);
+    transform: translateY(-1px);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Pixel primitives (Auth & Brand Landing)
+ * ------------------------------------------------------------------------ */
+.pixel-card {
+  background: var(--color-silver-50);
+  border: 2px solid var(--color-ink-900);
+  border-radius: 8px;
+  box-shadow: 8px 8px 0 var(--color-silver-400);
+}
+
+.pixel-card-accent {
+  background: var(--color-silver-50);
+  border: 2px solid var(--color-ink-900);
+  border-radius: 8px;
+  box-shadow: 8px 8px 0 var(--shadow-accent);
+}
+
+.pixel-chip {
+  background: var(--color-silver-50);
+  border: 2px solid var(--color-ink-900);
+  border-radius: 999px;
+}
+
+.pixel-dots {
+  background-image: radial-gradient(rgb(30 41 59 / 8%) 1.5px, transparent 1.5px);
+  background-size: 18px 18px;
+}
+
+.pixel-dashed {
+  border: 2px dashed rgb(30 41 59 / 20%);
+}
+
+.pixel-divider-top {
+  border-top: 2px dashed rgb(30 41 59 / 14%);
+}
+
+.pixel-header-border {
+  border-bottom: 2px solid var(--color-ink-900);
+}
+
+.pixel-sparkle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--color-accent-400);
+  box-shadow:
+    0 -7px 0 var(--color-accent-400),
+    0 7px 0 var(--color-accent-400),
+    -7px 0 0 var(--color-accent-400),
+    7px 0 0 var(--color-accent-400);
+  animation: pixel-twinkle 2.8s steps(2, end) infinite;
+}
+
+@keyframes pixel-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+}
+
+/* Cursor de editor de texto: parpadeo seco (encendido/apagado), sin desvanecer. */
+.caret-blink {
+  animation: caret-blink 1.06s steps(1, end) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.mascot-bob {
+  animation: mascot-bob 3.4s ease-in-out infinite;
+}
+
+@keyframes mascot-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.pixel-button.v-btn {
+  border: 2px solid var(--color-ink-900);
+  border-radius: 8px;
+  box-shadow: 5px 5px 0 var(--color-ink-900);
+  transition:
+    transform 120ms steps(2, end),
+    box-shadow 120ms steps(2, end);
+}
+
+.pixel-button.v-btn .v-btn__content {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+
+.pixel-button.v-btn:not(.v-btn--disabled):hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 var(--color-ink-900);
+}
+
+.pixel-button.v-btn:not(.v-btn--disabled):active {
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 var(--color-ink-900);
+}
+
+.pixel-icon-button.v-btn {
+  border: 2px solid var(--color-ink-900);
+  border-radius: 8px;
+  background: var(--color-silver-50);
+  box-shadow: 3px 3px 0 var(--color-ink-900);
+}
+
+/* ---------------------------------------------------------------------------
+ * Vuetify adjustments
+ * ------------------------------------------------------------------------ */
+.v-btn {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-weight: 700;
+}
+
+.v-field {
+  background-color: var(--color-silver-50);
+  border-radius: 8px !important;
+}
+
+.v-field--variant-outlined .v-field__outline {
+  --v-field-border-opacity: 0.35;
+}
+
+.v-field--variant-outlined.v-field--focused .v-field__outline {
+  --v-field-border-opacity: 1;
+}
+
+.v-field input::placeholder {
+  color: rgb(100 116 139 / 60%);
+}
+
+.v-field input:-webkit-autofill,
+.v-field input:-webkit-autofill:hover,
+.v-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-ink-900);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.auth-alert.v-alert {
+  border: 2px solid #ef4444;
+  border-radius: 8px;
+  background: #fef2f2;
+}
+
+.v-snackbar__content {
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
