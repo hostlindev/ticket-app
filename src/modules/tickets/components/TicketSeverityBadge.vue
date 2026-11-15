@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import type { TicketSeverity } from '../interface/ticket.interface'
 
 const props = defineProps<{
-  /** null = aún sin clasificar por el sistema */
+  /** null solo si el reporte llegó sin prioridad (no debería ocurrir) */
   severity: TicketSeverity | null
 }>()
 
@@ -25,7 +25,7 @@ const config = computed<SeverityStyle>(() => {
       return { label: 'P4 · Baja', classes: 'border-ink-900/30 bg-silver-200 text-ink-700', dot: 'bg-silver-400' }
     default:
       return {
-        label: 'Por clasificar',
+        label: 'Sin prioridad',
         classes: 'border-dashed border-silver-400 bg-white text-ink-500',
         dot: 'bg-silver-300',
       }

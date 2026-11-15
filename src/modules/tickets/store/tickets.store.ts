@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
+import { errorMessage } from '@core/api/errors'
 import type {
   IssueType,
   PaginationMeta,
@@ -13,7 +14,7 @@ import { getTickets, getTicketsSummary, updateTicketStatus } from '../services/t
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 50]
 
-const EMPTY_SUMMARY: TicketsSummary = { total: 0, criticalP1: 0, pending: 0, inProgress: 0, resolved: 0, systems: [] }
+const EMPTY_SUMMARY: TicketsSummary = { total: 0, criticalP1: 0, lowPriority: 0, inProgress: 0, resolved: 0, systems: [] }
 
 export const useTicketsStore = defineStore('tickets', () => {
   // La lista contiene SOLO la página actual; el resto vive en el backend.
@@ -23,6 +24,7 @@ export const useTicketsStore = defineStore('tickets', () => {
   const selectedTicket = ref<Ticket | null>(null)
   const isLoading = ref(false)
   const hasLoaded = ref(false)
+  const isUpdatingStatus = ref(false)
   const error = ref<string | null>(null)
 
   // Paginación y filtros (se envían al backend)
@@ -68,7 +70,7 @@ export const useTicketsStore = defineStore('tickets', () => {
       hasLoaded.value = true
     } catch (err) {
       if (id !== requestId) return
-      error.value = err instanceof Error ? err.message : 'Error al cargar tickets'
+      error.value = errorMessage(err, 'Error al cargar tickets')
     } finally {
       if (id === requestId) isLoading.value = false
     }
@@ -104,22 +106,33 @@ export const useTicketsStore = defineStore('tickets', () => {
     searchTimer = setTimeout(refetchFromStart, 300)
   })
 
-  async function changeStatus(ticketId: string, status: TicketStatus): Promise<void> {
-    isLoading.value = true
+  /**
+   * Cambia el estado de forma optimista (la UI reacciona al instante) y revierte si la API falla.
+   * Devuelve true si el estado se guardó.
+   */
+  async function changeStatus(ticketId: string, status: TicketStatus): Promise<boolean> {
+    const index = tickets.value.findIndex((t) => t.id === ticketId)
+    const previous = index === -1 ? null : tickets.value[index]!
+
+    isUpdatingStatus.value = true
+    if (previous) tickets.value[index] = { ...previous, status }
+
     try {
       const updated = await updateTicketStatus(ticketId, status)
-      const index = tickets.value.findIndex((t) => t.id === ticketId)
-      if (index !== -1) {
-        tickets.value[index] = updated
-      }
+      const current = tickets.value.findIndex((t) => t.id === ticketId)
+      if (current !== -1) tickets.value[current] = updated
       fetchSummary()
       if (selectedTicket.value?.id === ticketId) {
         selectedTicket.value = updated
       }
+      return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Error al actualizar estado'
+      const current = tickets.value.findIndex((t) => t.id === ticketId)
+      if (previous && current !== -1) tickets.value[current] = previous
+      error.value = errorMessage(err, 'Error al actualizar estado')
+      return false
     } finally {
-      isLoading.value = false
+      isUpdatingStatus.value = false
     }
   }
 
@@ -139,6 +152,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     tickets,
     selectedTicket,
     isLoading,
+    isUpdatingStatus,
     error,
     search,
     severityFilter,

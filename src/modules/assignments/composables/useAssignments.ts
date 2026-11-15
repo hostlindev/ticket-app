@@ -9,6 +9,9 @@ export function useAssignments() {
     ...refs,
     load: store.load,
     saveDevelopers: store.saveDevelopers,
+    addSystem: store.addSystem,
+    editSystem: store.editSystem,
+    removeSystem: store.removeSystem,
     resetFilters: store.resetFilters,
   }
 }

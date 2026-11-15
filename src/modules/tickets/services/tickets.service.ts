@@ -1,3 +1,5 @@
+import http, { type ApiResponse } from '@core/api/http'
+import { USE_MOCK } from '@core/api/config'
 import type {
   IssueType,
   Paginated,
@@ -32,20 +34,20 @@ const MOCK_TICKETS: Ticket[] = [
     id: 'INC-2050',
     description: 'No encuentro dónde cambiar mi foto de perfil, busqué en todos lados.',
     issueType: 'other',
-    severity: null,
+    severity: 'P4',
     status: 'open',
     system: 'EduPath Campus',
     reporter: { id: 'usr_8120', name: 'Camila Duarte', email: 'camila.duarte@edupath.edu' },
     browser: 'Safari 17 · iPhone (iOS 17)',
     ipAddress: '198.51.100.24',
     createdAt: minutesAgo(8),
-    slaMinutesRemaining: null,
+    slaMinutesRemaining: 4000,
   },
   {
     id: 'INC-2049',
     description: 'Mi cita aparece para el martes pero yo la agendé para el jueves.',
     issueType: 'wrong_info',
-    severity: null,
+    severity: 'P3',
     status: 'open',
     system: 'MediBook Citas',
     reporter: { id: 'usr_7744', name: 'Andrés Pineda', email: 'andres.pineda@correo.com' },
@@ -53,7 +55,7 @@ const MOCK_TICKETS: Ticket[] = [
     browser: 'Chrome 124 · Android 14',
     ipAddress: '203.0.113.77',
     createdAt: minutesAgo(21),
-    slaMinutesRemaining: null,
+    slaMinutesRemaining: 1200,
   },
   {
     id: 'INC-2048',
@@ -233,8 +235,8 @@ const BROWSERS = [
   'Safari 17 · iPhone (iOS 17)',
 ]
 const ISSUE_KEYS = Object.keys(ISSUE_TYPES) as IssueType[]
-const STATUS_POOL: TicketStatus[] = ['open', 'open', 'in_progress', 'in_review', 'resolved', 'closed']
-const SEVERITY_POOL: Array<TicketSeverity | null> = ['P1', 'P2', 'P2', 'P3', 'P3', 'P4', 'P4']
+const STATUS_POOL: TicketStatus[] = ['open', 'open', 'in_review', 'in_review', 'resolved', 'resolved']
+const SEVERITY_POOL: TicketSeverity[] = ['P1', 'P2', 'P2', 'P3', 'P3', 'P4', 'P4']
 const SLA_MINUTES: Record<TicketSeverity, number> = { P1: 60, P2: 240, P3: 1440, P4: 4320 }
 
 function generateTickets(count: number): Ticket[] {
@@ -252,7 +254,9 @@ function generateTickets(count: number): Ticket[] {
     const [name, email] = REPORTERS[rnd(REPORTERS.length)]!
     const status = STATUS_POOL[rnd(STATUS_POOL.length)]!
     const closed = status === 'resolved' || status === 'closed'
-    const severity = i < 2 && !closed ? null : SEVERITY_POOL[rnd(SEVERITY_POOL.length)]!
+    // "Otro" siempre cuenta como prioridad baja (P4), igual que en el backend.
+    const pooled = SEVERITY_POOL[rnd(SEVERITY_POOL.length)]!
+    const severity: TicketSeverity = issueType === 'other' ? 'P4' : pooled
     const age = 120 + i * 190 + rnd(120)
     const hasShot = rnd(3) === 0
 
@@ -284,15 +288,28 @@ const isActive = (t: Ticket): boolean => t.status !== 'resolved' && t.status !==
 
 /** Equivale a `GET /tickets?page=&pageSize=&search=&severity=&status=&system=&issueType=` */
 export async function getTickets(query: TicketsQuery): Promise<Paginated<Ticket>> {
+  if (!USE_MOCK) {
+    const { data: body } = await http.get<ApiResponse<Paginated<Ticket>>>('/tickets', {
+      params: {
+        page: query.page,
+        pageSize: query.pageSize,
+        search: query.search.trim() || undefined,
+        severity: query.severity,
+        status: query.status,
+        system: query.system,
+        issueType: query.issueType,
+      },
+    })
+    return body.data
+  }
+
   await delay(220)
 
   const search = query.search.trim().toLowerCase()
 
   const matches = ticketsCache
     .filter((t) => {
-      if (query.severity === 'pending') {
-        if (t.severity !== null) return false
-      } else if (query.severity !== 'all' && t.severity !== query.severity) return false
+      if (query.severity !== 'all' && t.severity !== query.severity) return false
 
       if (query.status !== 'all' && t.status !== query.status) return false
       if (query.system !== 'all' && t.system !== query.system) return false
@@ -321,11 +338,16 @@ export async function getTickets(query: TicketsQuery): Promise<Paginated<Ticket>
 
 /** Equivale a `GET /tickets/summary`: totales globales, sin paginar ni filtrar. */
 export async function getTicketsSummary(): Promise<TicketsSummary> {
+  if (!USE_MOCK) {
+    const { data: body } = await http.get<ApiResponse<TicketsSummary>>('/tickets/summary')
+    return body.data
+  }
+
   await delay(120)
   return {
     total: ticketsCache.length,
     criticalP1: ticketsCache.filter((t) => t.severity === 'P1' && isActive(t)).length,
-    pending: ticketsCache.filter((t) => t.severity === null && isActive(t)).length,
+    lowPriority: ticketsCache.filter((t) => t.severity === 'P4' && isActive(t)).length,
     inProgress: ticketsCache.filter((t) => t.status === 'in_progress' || t.status === 'open').length,
     resolved: ticketsCache.filter((t) => !isActive(t)).length,
     systems: Array.from(new Set(ticketsCache.map((t) => t.system))).sort(),
@@ -333,12 +355,27 @@ export async function getTicketsSummary(): Promise<TicketsSummary> {
 }
 
 export async function getTicketById(id: string): Promise<Ticket | null> {
+  if (!USE_MOCK) {
+    try {
+      const { data: body } = await http.get<ApiResponse<Ticket>>(`/tickets/${encodeURIComponent(id)}`)
+      return body.data
+    } catch (error) {
+      if ((error as { code?: string }).code === 'ERR_NOT_FOUND') return null
+      throw error
+    }
+  }
+
   await delay(120)
   const ticket = ticketsCache.find((t) => t.id === id)
   return ticket ? { ...ticket } : null
 }
 
 export async function updateTicketStatus(id: string, status: TicketStatus): Promise<Ticket> {
+  if (!USE_MOCK) {
+    const { data: body } = await http.patch<ApiResponse<Ticket>>(`/tickets/${encodeURIComponent(id)}/status`, { status })
+    return body.data
+  }
+
   await delay(150)
   const index = ticketsCache.findIndex((t) => t.id === id)
   const current = index === -1 ? undefined : ticketsCache[index]

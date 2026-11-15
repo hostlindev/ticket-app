@@ -1,13 +1,22 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { errorMessage } from '@core/api/errors'
 import { useAuthStore } from '@modules/auth/store/auth.store'
 import type {
   AssignmentFilter,
   AssignmentsSummary,
   Developer,
+  NewSystemInput,
   SystemAssignment,
 } from '../interface/assignment.interface'
-import { getDevelopers, getSystems, setSystemDevelopers } from '../services/assignments.service'
+import {
+  createSystem,
+  deleteSystem,
+  getDevelopers,
+  getSystems,
+  setSystemDevelopers,
+  updateSystem,
+} from '../services/assignments.service'
 
 export const useAssignmentsStore = defineStore('assignments', () => {
   const auth = useAuthStore()
@@ -69,7 +78,7 @@ export const useAssignmentsStore = defineStore('assignments', () => {
       hasLoaded.value = true
       syncCurrentUser()
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'No pudimos cargar los sistemas.'
+      error.value = errorMessage(err, 'No pudimos cargar los sistemas.')
     } finally {
       isLoading.value = false
     }
@@ -82,6 +91,44 @@ export const useAssignmentsStore = defineStore('assignments', () => {
       const updated = await setSystemDevelopers(systemId, developerIds)
       const index = systems.value.findIndex((s) => s.id === systemId)
       if (index !== -1) systems.value[index] = updated
+      syncCurrentUser()
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  /** Registra un sistema nuevo (sin equipo). Lanza error si falla. */
+  async function addSystem(input: NewSystemInput): Promise<SystemAssignment> {
+    isSaving.value = true
+    try {
+      const created = await createSystem(input)
+      systems.value.push(created)
+      return created
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  /** Edita nombre, dominio y descripción de un sistema. Lanza error si falla. */
+  async function editSystem(systemId: string, input: NewSystemInput): Promise<SystemAssignment> {
+    isSaving.value = true
+    try {
+      const updated = await updateSystem(systemId, input)
+      const index = systems.value.findIndex((s) => s.id === systemId)
+      if (index !== -1) systems.value[index] = updated
+      syncCurrentUser()
+      return updated
+    } finally {
+      isSaving.value = false
+    }
+  }
+
+  /** Elimina un sistema. Lanza error si falla. */
+  async function removeSystem(systemId: string): Promise<void> {
+    isSaving.value = true
+    try {
+      await deleteSystem(systemId)
+      systems.value = systems.value.filter((s) => s.id !== systemId)
       syncCurrentUser()
     } finally {
       isSaving.value = false
@@ -107,6 +154,9 @@ export const useAssignmentsStore = defineStore('assignments', () => {
     workload,
     load,
     saveDevelopers,
+    addSystem,
+    editSystem,
+    removeSystem,
     resetFilters,
   }
 })

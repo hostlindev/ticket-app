@@ -41,12 +41,12 @@ defineSlots<{
     </div>
 
     <div class="relative z-10 flex flex-1 flex-col lg:flex-row">
-      <aside class="hidden px-12 py-10 lg:flex lg:w-1/2 xl:px-20 xl:py-14">
+      <aside class="fx-in hidden px-12 py-10 lg:flex lg:w-1/2 xl:px-20 xl:py-14">
         <slot name="brand" />
       </aside>
 
       <main class="flex flex-1 items-center justify-center px-5 pb-8 pt-20 sm:px-8 lg:px-12 lg:py-10">
-        <div class="w-full max-w-[460px]">
+        <div class="fx-in w-full max-w-[460px] [--i:3]">
           <div class="mb-7 flex items-center gap-2.5 lg:hidden">
             <span
               class="grid h-11 w-11 place-items-center rounded-[8px] border-2 border-ink-900 bg-silver-50 shadow-[3px_3px_0_#1e293b]"

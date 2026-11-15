@@ -33,6 +33,13 @@ export const navSections: NavSection[] = [
         icon: 'mdi-account-multiple-plus-outline',
         roles: ['admin'],
       },
+      {
+        name: 'Usuarios',
+        to: '/usuarios',
+        routeName: 'users.list',
+        icon: 'mdi-account-cog-outline',
+        roles: ['admin'],
+      },
     ],
   },
 ]

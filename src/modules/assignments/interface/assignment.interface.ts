@@ -11,7 +11,16 @@ export interface SystemAssignment {
   id: string
   name: string
   domain: string
+  /** Descripción breve del sistema (opcional). */
+  description?: string
   developers: Developer[]
+}
+
+/** Datos necesarios para registrar un sistema nuevo. */
+export interface NewSystemInput {
+  name: string
+  domain: string
+  description?: string
 }
 
 export type AssignmentFilter = 'all' | 'unassigned' | 'assigned'

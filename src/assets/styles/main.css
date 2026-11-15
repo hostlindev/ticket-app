@@ -251,21 +251,6 @@ h3 {
   }
 }
 
-.mascot-bob {
-  animation: mascot-bob 3.4s ease-in-out infinite;
-}
-
-@keyframes mascot-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
 .pixel-button.v-btn {
   border: 2px solid var(--color-ink-900);
   border-radius: 8px;
@@ -340,4 +325,67 @@ h3 {
 .v-snackbar__content {
   font-family: var(--font-sans);
   font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------
+ * Entrada de contenido (suave y barata)
+ * ------------------------------------------------------------------------
+ * Solo `opacity` y `transform` (los compone la GPU, sin reflow). Se dispara cuando
+ * el elemento entra al DOM: al abrir una vista y al aparecer los datos cargados.
+ * El escalonado sale de la posición entre hermanos (--i) más el de su sección (--base).
+ * ------------------------------------------------------------------------ */
+@keyframes fx-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer components {
+  .fx-in,
+  .console-card:not(.animate-pulse):not(.v-overlay *),
+  .console-card-interactive:not(.animate-pulse):not(.v-overlay *) {
+    animation: fx-in 360ms cubic-bezier(0.22, 0.8, 0.3, 1) backwards;
+    animation-delay: calc(var(--base, 0ms) + var(--i, 0) * 40ms);
+  }
+
+  /* Posición entre hermanos (tope en 6 para que nunca se sienta lento). */
+  .console-card:nth-child(1),
+  .console-card-interactive:nth-child(1) { --i: 0; }
+  .console-card:nth-child(2),
+  .console-card-interactive:nth-child(2) { --i: 1; }
+  .console-card:nth-child(3),
+  .console-card-interactive:nth-child(3) { --i: 2; }
+  .console-card:nth-child(4),
+  .console-card-interactive:nth-child(4) { --i: 3; }
+  .console-card:nth-child(5),
+  .console-card-interactive:nth-child(5) { --i: 4; }
+  .console-card:nth-child(6),
+  .console-card-interactive:nth-child(6) { --i: 5; }
+  .console-card:nth-child(n + 7),
+  .console-card-interactive:nth-child(n + 7) { --i: 6; }
+
+  /* Secciones de una vista: cada una entra un poco después de la anterior. */
+  .page-enter > div > :nth-child(1) { --base: 0ms; }
+  .page-enter > div > :nth-child(2) { --base: 50ms; }
+  .page-enter > div > :nth-child(3) { --base: 100ms; }
+  .page-enter > div > :nth-child(4) { --base: 150ms; }
+  .page-enter > div > :nth-child(5) { --base: 200ms; }
+  .page-enter > div > :nth-child(n + 6) { --base: 250ms; }
+
+  /* Una tarjeta que ya es la sección no suma su propia posición. */
+  .page-enter > div > .console-card,
+  .page-enter > div > .console-card-interactive { --i: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-in,
+  .console-card,
+  .console-card-interactive {
+    animation: none !important;
+  }
 }

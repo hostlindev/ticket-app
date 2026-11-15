@@ -14,3 +14,8 @@ attachAuthToken(http)
 normalizeApiError(http)
 
 export default http
+
+/** Envelope every successful Laravel response is wrapped in. */
+export interface ApiResponse<T> {
+  data: T
+}

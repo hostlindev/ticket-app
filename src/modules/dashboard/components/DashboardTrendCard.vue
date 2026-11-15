@@ -24,7 +24,7 @@ function height(value: number): string {
           <span class="size-2.5 rounded-sm bg-accent-500" />Creadas {{ createdTotal }}
         </span>
         <span class="inline-flex items-center gap-1.5">
-          <span class="size-2.5 rounded-sm bg-emerald-500" />Resueltas {{ resolvedTotal }}
+          <span class="size-2.5 rounded-sm bg-ink-700" />Resueltas {{ resolvedTotal }}
         </span>
       </div>
     </div>
@@ -42,7 +42,7 @@ function height(value: number): string {
             :title="`Creadas: ${point.created}`"
           />
           <div
-            class="w-full max-w-5 rounded-t-md bg-emerald-500 transition-all duration-500"
+            class="w-full max-w-5 rounded-t-md bg-ink-700 transition-all duration-500"
             :style="{ height: height(point.resolved) }"
             :title="`Resueltas: ${point.resolved}`"
           />

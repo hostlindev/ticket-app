@@ -1,4 +1,6 @@
-import type { Developer, SystemAssignment } from '../interface/assignment.interface'
+import http, { type ApiResponse } from '@core/api/http'
+import { USE_MOCK } from '@core/api/config'
+import type { Developer, NewSystemInput, SystemAssignment } from '../interface/assignment.interface'
 
 const DEVELOPERS: Developer[] = [
   { id: 'usr_ada', name: 'Ada Lovelace', email: 'ada@ticket.dev', specialty: 'Plataforma' },
@@ -30,7 +32,7 @@ const assignments = new Map<string, string[]>([
   ['app-edupath', []],
 ])
 
-const SYSTEMS = [
+const SYSTEMS: Array<Omit<SystemAssignment, 'developers'>> = [
   { id: 'app-nexaportal', name: 'NexaPortal Clientes', domain: 'clientes.nexa.io' },
   { id: 'app-kromashop', name: 'KromaShop B2B', domain: 'tienda.kroma.com' },
   { id: 'app-velocepay', name: 'VelocePay Checkout', domain: 'checkout.veloce.io' },
@@ -45,27 +47,110 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function toSystem(base: (typeof SYSTEMS)[number]): SystemAssignment {
+function toSystem(base: Omit<SystemAssignment, 'developers'>): SystemAssignment {
   return { ...base, developers: byId(assignments.get(base.id) ?? []) }
 }
 
 /** Equivale a `GET /systems` (con sus desarrolladores asignados). */
 export async function getSystems(): Promise<SystemAssignment[]> {
+  if (!USE_MOCK) {
+    const { data: body } = await http.get<ApiResponse<SystemAssignment[]>>('/systems')
+    return body.data
+  }
+
   await delay(250)
   return SYSTEMS.map(toSystem)
 }
 
 /** Equivale a `GET /developers`. */
 export async function getDevelopers(): Promise<Developer[]> {
+  if (!USE_MOCK) {
+    const { data: body } = await http.get<ApiResponse<Developer[]>>('/developers')
+    return body.data
+  }
+
   await delay(150)
   return DEVELOPERS.map((d) => ({ ...d }))
 }
 
 /** Equivale a `PUT /systems/:id/developers` con la lista completa de ids. */
 export async function setSystemDevelopers(systemId: string, developerIds: string[]): Promise<SystemAssignment> {
+  if (!USE_MOCK) {
+    const { data: body } = await http.put<ApiResponse<SystemAssignment>>(`/systems/${encodeURIComponent(systemId)}/developers`, {
+      developerIds: [...new Set(developerIds)],
+    })
+    return body.data
+  }
+
   await delay(300)
   const base = SYSTEMS.find((s) => s.id === systemId)
   if (!base) throw new Error('El sistema ya no existe.')
   assignments.set(systemId, [...new Set(developerIds)])
+  return toSystem(base)
+}
+
+/** Equivale a `PUT /systems/:id` (nombre, dominio y descripción). */
+export async function updateSystem(systemId: string, input: NewSystemInput): Promise<SystemAssignment> {
+  if (!USE_MOCK) {
+    const { data: body } = await http.put<ApiResponse<SystemAssignment>>(
+      `/systems/${encodeURIComponent(systemId)}`,
+      input,
+    )
+    return body.data
+  }
+
+  await delay(300)
+  const base = SYSTEMS.find((s) => s.id === systemId)
+  if (!base) throw new Error('El sistema ya no existe.')
+  const domain = input.domain.trim().toLowerCase()
+  if (SYSTEMS.some((s) => s.id !== systemId && s.domain.toLowerCase() === domain)) {
+    throw new Error('Ya existe un sistema registrado con ese dominio.')
+  }
+  base.name = input.name.trim()
+  base.domain = domain
+  base.description = input.description?.trim() || undefined
+  return toSystem(base)
+}
+
+/** Equivale a `DELETE /systems/:id`. */
+export async function deleteSystem(systemId: string): Promise<void> {
+  if (!USE_MOCK) {
+    await http.delete(`/systems/${encodeURIComponent(systemId)}`)
+    return
+  }
+
+  await delay(300)
+  const index = SYSTEMS.findIndex((s) => s.id === systemId)
+  if (index === -1) throw new Error('El sistema ya no existe.')
+  SYSTEMS.splice(index, 1)
+  assignments.delete(systemId)
+}
+
+/** Equivale a `POST /systems`. */
+export async function createSystem(input: NewSystemInput): Promise<SystemAssignment> {
+  if (!USE_MOCK) {
+    // El backend aún no expone `POST /systems`.
+    throw new Error('El registro de sistemas todavía no está disponible en la API.')
+  }
+
+  await delay(400)
+  const name = input.name.trim()
+  const domain = input.domain.trim().toLowerCase()
+  if (SYSTEMS.some((s) => s.domain.toLowerCase() === domain)) {
+    throw new Error('Ya existe un sistema registrado con ese dominio.')
+  }
+  const slug = name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+  const base = {
+    id: `app-${slug || 'sistema'}-${Date.now().toString(36)}`,
+    name,
+    domain,
+    description: input.description?.trim() || undefined,
+  }
+  SYSTEMS.push(base)
+  assignments.set(base.id, [])
   return toSystem(base)
 }

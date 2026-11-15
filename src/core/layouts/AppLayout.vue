@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia'
 import PixelBuddy from '@core/components/PixelBuddy.vue'
 import UserProfileMenu from '@core/components/UserProfileMenu.vue'
 import { brand } from '@core/config/brand'
+import { usePixibot } from '@core/composables/usePixibot'
 import { navSections, type NavItem } from '@core/config/navigation'
 import { useAuthStore } from '@modules/auth/store/auth.store'
 import type { UserRole } from '@modules/auth/interface/auth.interface'
@@ -32,7 +33,10 @@ const route = useRoute()
 // donde sí hay espacio para la barra lateral permanente.
 const { mobile } = useDisplay({ mobileBreakpoint: 'md' })
 const auth = useAuthStore()
-const { user, firstName, userInitials } = storeToRefs(auth)
+const { user, userInitials } = storeToRefs(auth)
+
+// Widget flotante de Pixibot para reportar incidencias desde cualquier pantalla.
+usePixibot()
 
 const roleLabel = computed(() => ROLE_LABELS[user.value?.role ?? 'developer'])
 // Oculta las opciones (y secciones vacías) que el rol actual no puede abrir.
@@ -196,7 +200,7 @@ async function handleLogout(): Promise<void> {
               <span class="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white bg-emerald-500" />
             </div>
             <div class="min-w-0 flex-1">
-              <p class="truncate text-[12.5px] font-bold leading-tight text-ink-900">{{ firstName }}</p>
+              <p class="truncate text-[12.5px] font-bold leading-tight text-ink-900">{{ user?.name }}</p>
               <p class="truncate text-[11px] text-ink-500">{{ roleLabel }}</p>
             </div>
             <button
@@ -214,7 +218,7 @@ async function handleLogout(): Promise<void> {
             <v-avatar
               size="36"
               class="border-2 border-white bg-accent-600 text-[12px] font-bold text-white shadow-xs"
-              :title="`${firstName} · ${roleLabel}`"
+              :title="`${user?.name} · ${roleLabel}`"
             >
               {{ userInitials }}
             </v-avatar>
@@ -274,10 +278,10 @@ async function handleLogout(): Promise<void> {
          3. CONTENIDO
          ========================================================================= -->
     <v-main>
-      <v-container class="mx-auto w-full max-w-[1320px] px-4 py-5 sm:px-8 sm:py-8">
+      <v-container class="page-enter mx-auto w-full max-w-[1320px] px-4 py-5 sm:px-8 sm:py-8">
         <header
           v-if="title || $slots['header-actions']"
-          class="mb-5 flex flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between sm:gap-6"
+          class="fx-in mb-5 flex flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between sm:gap-6"
         >
           <div class="min-w-0">
             <h1 class="text-xl font-bold tracking-tight text-ink-900 sm:text-3xl">{{ title }}</h1>

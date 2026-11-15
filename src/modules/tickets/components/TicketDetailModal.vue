@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useDisplay } from 'vuetify'
-import type { Ticket, TicketStatus } from '../interface/ticket.interface'
+import { normalizeStatus, type Ticket, type TicketStatus } from '../interface/ticket.interface'
 import { ISSUE_TYPES } from '../config/ticket.config'
 import { useTicketsStore } from '../store/tickets.store'
 import { useToast } from '@core/composables/useToast'
@@ -25,18 +25,58 @@ const zoomOpen = ref(false)
 
 const issue = computed(() => (props.ticket ? ISSUE_TYPES[props.ticket.issueType] : null))
 
-const STATUS_LABELS: Record<TicketStatus, string> = {
+const STATUS_LABELS: Record<'open' | 'in_review' | 'resolved', string> = {
   open: 'Abierto',
-  in_progress: 'En progreso',
   in_review: 'En revisión',
   resolved: 'Resuelto',
-  closed: 'Cerrado',
 }
 
+/** Estado vigente (los valores heredados in_progress/closed se reducen a los tres del flujo). */
+const currentStatus = computed(() => (props.ticket ? normalizeStatus(props.ticket.status) : null))
+
+/** Pasos del flujo. Cada tarjeta indica qué significa y qué hace al pulsarla. */
+const STATUS_STEPS: Array<{
+  status: 'open' | 'in_review' | 'resolved'
+  title: string
+  hint: string
+  icon: string
+  active: string
+  dot: string
+}> = [
+  {
+    status: 'open',
+    title: 'Abierto',
+    hint: 'Reportado, sin responsable',
+    icon: 'mdi-alert-circle-outline',
+    active: 'border-red-500/60 bg-red-500/10 text-red-800',
+    dot: 'bg-red-500 text-white',
+  },
+  {
+    status: 'in_review',
+    title: 'En revisión',
+    hint: 'Te la asignas y la atiendes',
+    icon: 'mdi-eye-check-outline',
+    active: 'border-amber-500/60 bg-amber-400/20 text-amber-900',
+    dot: 'bg-amber-500 text-white',
+  },
+  {
+    status: 'resolved',
+    title: 'Resuelto',
+    hint: 'Terminada y cerrada',
+    icon: 'mdi-check-circle-outline',
+    active: 'border-emerald-600/50 bg-emerald-500/15 text-emerald-800',
+    dot: 'bg-emerald-600 text-white',
+  },
+]
+
+const STEP_ORDER = ['open', 'in_review', 'resolved'] as const
+const currentIndex = computed(() => (currentStatus.value ? STEP_ORDER.indexOf(currentStatus.value) : -1))
+
 async function handleStatusChange(status: TicketStatus): Promise<void> {
-  if (!props.ticket) return
-  await store.changeStatus(props.ticket.id, status)
-  toast.success(`Estado actualizado a: ${STATUS_LABELS[status]}`)
+  if (!props.ticket || currentStatus.value === status || store.isUpdatingStatus) return
+  const saved = await store.changeStatus(props.ticket.id, status)
+  if (saved) toast.success(`Estado actualizado a: ${STATUS_LABELS[normalizeStatus(status)]}`)
+  else toast.error(store.error ?? 'No pudimos actualizar el estado.')
 }
 
 function close(): void {
@@ -89,10 +129,6 @@ function close(): void {
           <TicketSeverityBadge :severity="ticket.severity" />
           <TicketStatusBadge :status="ticket.status" />
         </div>
-
-        <p v-if="ticket.severity === null" class="mt-2 text-[12px] text-ink-500">
-          La prioridad (P1–P4) la asigna el sistema automáticamente; este reporte aún no ha sido clasificado.
-        </p>
 
         <!-- Lo que escribió el usuario -->
         <section class="mt-5">
@@ -183,38 +219,50 @@ function close(): void {
                 <span v-if="ticket.assignee?.role" class="font-normal text-ink-500">({{ ticket.assignee.role }})</span>
               </dd>
             </div>
+            <div v-if="ticket.resolvedBy" class="rounded-xl border border-silver-200 bg-silver-50 p-3">
+              <dt class="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-ink-500">
+                <v-icon icon="mdi-check-decagram-outline" size="14" />Resuelto por
+              </dt>
+              <dd class="m-0 mt-1 text-[13px] font-semibold text-ink-900">
+                {{ ticket.resolvedBy.name }}
+                <span v-if="ticket.resolvedBy.role" class="font-normal text-ink-500">({{ ticket.resolvedBy.role }})</span>
+                <span
+                  v-if="ticket.resolvedBy.removed"
+                  class="ml-1 rounded-md border border-silver-300 bg-silver-100 px-1.5 py-0.5 text-[10.5px] font-bold text-ink-600"
+                >
+                  Ya no está en la plataforma
+                </span>
+              </dd>
+            </div>
           </dl>
         </section>
 
         <!-- Gestión del estado -->
-        <section class="mt-5 grid grid-cols-2 items-center gap-2 rounded-xl border border-silver-200 bg-silver-50 p-2.5 sm:flex sm:flex-wrap">
-          <span class="col-span-2 mr-2 text-[11.5px] font-bold uppercase tracking-wider text-ink-500">Estado del reporte:</span>
-          <v-btn
-            size="small"
-            variant="flat"
-            density="comfortable"
-            :color="ticket.status === 'in_progress' ? 'primary' : undefined"
-            class="rounded-lg text-[12px] font-bold shadow-xs"
-            @click="handleStatusChange('in_progress')"
-          >
-            En progreso
-          </v-btn>
-          <v-btn
-            size="small"
-            variant="flat"
-            density="comfortable"
-            :color="ticket.status === 'in_review' ? 'primary' : undefined"
-            class="rounded-lg text-[12px] font-bold shadow-xs"
-            @click="handleStatusChange('in_review')"
-          >
-            En revisión
-          </v-btn>
-          <v-btn size="small" variant="flat" density="comfortable" color="success" class="rounded-lg text-[12px] font-bold shadow-xs" @click="handleStatusChange('resolved')">
-            Resolver
-          </v-btn>
-          <v-btn size="small" variant="text" density="comfortable" class="rounded-lg text-[12px] font-bold text-ink-500" @click="handleStatusChange('closed')">
-            Cerrar
-          </v-btn>
+        <section class="mt-5" aria-label="Estado del reporte">
+          <h4 class="text-[11.5px] font-bold uppercase tracking-wider text-ink-500">Estado del reporte</h4>
+          <ol class="m-0 mt-2 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-3">
+            <li v-for="(step, i) in STATUS_STEPS" :key="step.status" class="min-w-0">
+              <button
+                type="button"
+                class="status-step block w-full min-w-0 overflow-hidden rounded-xl border px-3.5 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400/70"
+                :class="
+                  currentIndex === i
+                    ? [step.active, 'pointer-events-none shadow-xs']
+                    : 'border-silver-300 bg-white text-ink-700 hover:border-ink-900/30 hover:bg-silver-100'
+                "
+                :disabled="!ticket"
+                :aria-current="currentIndex === i ? 'step' : undefined"
+                @click="handleStatusChange(step.status)"
+              >
+                <span class="flex items-center justify-between gap-2 text-[10.5px] font-bold uppercase tracking-wider opacity-70">
+                  <span>Paso {{ i + 1 }}</span>
+                  <v-icon :icon="i < currentIndex ? 'mdi-check-circle' : step.icon" size="16" />
+                </span>
+                <span class="mt-1 block text-[14px] font-bold leading-tight">{{ step.title }}</span>
+                <span class="mt-0.5 block text-[11.5px] leading-snug opacity-75">{{ step.hint }}</span>
+              </button>
+            </li>
+          </ol>
         </section>
       </div>
 
@@ -239,3 +287,12 @@ function close(): void {
     </div>
   </v-dialog>
 </template>
+
+<style scoped>
+.status-step {
+  transition:
+    background-color 120ms ease-out,
+    border-color 120ms ease-out,
+    color 120ms ease-out;
+}
+</style>

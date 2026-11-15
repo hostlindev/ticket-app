@@ -1,3 +1,5 @@
+import http, { type ApiResponse } from '@core/api/http'
+import { USE_MOCK } from '@core/api/config'
 import type {
   DashboardApp,
   DashboardSnapshot,
@@ -350,11 +352,17 @@ const SIMULATED_LATENCY_MS = 250
  * reemplazar el cuerpo por una llamada HTTP que devuelva un DashboardSnapshot.
  */
 export async function fetchDashboardSnapshot(): Promise<DashboardSnapshot> {
+  if (!USE_MOCK) {
+    const { data: body } = await http.get<ApiResponse<DashboardSnapshot>>('/dashboard')
+    return body.data
+  }
+
   await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS))
 
   return {
     apps: MOCK_APPS.map(toApp),
-    userIncidents: MOCK_USER_INCIDENTS.map((incident) => ({ ...incident })),
+    // En el mock, una de cada dos incidencias queda asignada a la persona en sesión.
+    userIncidents: MOCK_USER_INCIDENTS.map((incident, index) => ({ ...incident, assignedToMe: index % 2 === 0 })),
     mttrHours: 1.8,
     slaCompliance: 98.4,
     resolvedSprint: 24,

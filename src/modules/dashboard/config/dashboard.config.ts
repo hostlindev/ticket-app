@@ -2,7 +2,7 @@ import type { AppHealth, IncidentStatus, Severity } from '../interface/dashboard
 
 export const SEVERITIES: Severity[] = ['P1', 'P2', 'P3', 'P4']
 
-export const STATUSES: IncidentStatus[] = ['open', 'in_progress', 'in_review', 'resolved']
+export const STATUSES: IncidentStatus[] = ['open', 'in_review', 'resolved']
 
 /** Clases literales para que Tailwind las detecte. */
 export const SEVERITY_META: Record<
@@ -21,7 +21,7 @@ export const SEVERITY_META: Record<
 > = {
   P1: {
     title: 'Críticas',
-    sla: '< 1h SLA',
+    sla: 'Meta: menos de 1 h',
     hint: 'Usuarios no pueden operar',
     card: 'border-l-red-500',
     badge: 'border-red-200 bg-red-50 text-red-700',
@@ -32,7 +32,7 @@ export const SEVERITY_META: Record<
   },
   P2: {
     title: 'Altas',
-    sla: '< 4h SLA',
+    sla: 'Meta: menos de 4 h',
     hint: 'Fallas en descarga o carga',
     card: 'border-l-amber-500',
     badge: 'border-amber-200 bg-amber-50 text-amber-800',
@@ -43,7 +43,7 @@ export const SEVERITY_META: Record<
   },
   P3: {
     title: 'Medias',
-    sla: '< 24h SLA',
+    sla: 'Meta: menos de 24 h',
     hint: 'Errores frontend acotados',
     card: 'border-l-accent-500',
     badge: 'border-accent-200 bg-accent-50 text-accent-700',
@@ -54,7 +54,7 @@ export const SEVERITY_META: Record<
   },
   P4: {
     title: 'Bajas',
-    sla: '< 72h SLA',
+    sla: 'Meta: menos de 72 h',
     hint: 'Inconsistencias visuales',
     card: 'border-l-silver-400',
     badge: 'border-silver-200 bg-silver-100 text-ink-700',
@@ -68,7 +68,7 @@ export const SEVERITY_META: Record<
 export const STATUS_META: Record<IncidentStatus, { label: string; bar: string; dot: string }> = {
   open: { label: 'Abiertas', bar: 'bg-red-400', dot: 'bg-red-400' },
   in_progress: { label: 'En progreso', bar: 'bg-amber-400', dot: 'bg-amber-400' },
-  in_review: { label: 'En revisión', bar: 'bg-accent-400', dot: 'bg-accent-400' },
+  in_review: { label: 'En revisión', bar: 'bg-amber-400', dot: 'bg-amber-400' },
   resolved: { label: 'Resueltas', bar: 'bg-emerald-500', dot: 'bg-emerald-500' },
 }
 

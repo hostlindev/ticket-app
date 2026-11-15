@@ -2,8 +2,7 @@
 import { useDashboard } from '../composables/useDashboard'
 
 const {
-  apps,
-  userMetrics,
+  tabCounts,
   systemTab,
   pieTotal,
   pieSlices,
@@ -24,7 +23,9 @@ function toggle(id: string) {
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="min-w-0">
           <h3 class="text-lg font-bold text-ink-900">Reparto por app web</h3>
-          <p class="text-[12px] text-ink-500">Incidencias activas de cada aplicación.</p>
+          <p class="text-[12px] text-ink-500">
+            {{ systemTab === 'mine' ? 'Incidencias activas asignadas a ti, por aplicación.' : 'Incidencias activas de tus aplicaciones.' }}
+          </p>
         </div>
 
         <!-- Tab switcher -->
@@ -35,7 +36,7 @@ function toggle(id: string) {
             :class="systemTab === 'all' ? 'bg-white text-ink-900 font-bold shadow-xs' : 'text-ink-600 hover:text-ink-900'"
             @click="setSystemTab('all')"
           >
-            Todas ({{ apps.length }})
+            Todas ({{ tabCounts.all }})
           </button>
           <button
             type="button"
@@ -43,13 +44,13 @@ function toggle(id: string) {
             :class="systemTab === 'mine' ? 'bg-white text-ink-900 font-bold shadow-xs' : 'text-ink-600 hover:text-ink-900'"
             @click="setSystemTab('mine')"
           >
-            A mi cargo ({{ userMetrics.assignedSystemsCount }})
+            A mi cargo ({{ tabCounts.mine }})
           </button>
         </div>
       </div>
 
       <div class="mt-5 flex flex-col items-center">
-        <div class="relative w-full max-w-60">
+        <div class="relative w-full max-w-60 [container-type:inline-size]">
           <svg viewBox="0 0 240 240" class="aspect-square w-full select-none drop-shadow-md" role="img" aria-label="Gráfica de dona de incidencias por app">
             <!-- Anillo base cuando no hay datos -->
             <circle v-if="!pieTotal" cx="120" cy="120" r="85" fill="none" stroke="#e2e8f0" stroke-width="46" />
@@ -77,17 +78,24 @@ function toggle(id: string) {
           </svg>
 
           <!-- Centro de la dona -->
-          <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-12 text-center">
-            <span class="text-3xl font-extrabold tabular-nums leading-none text-ink-900">
-              {{ activeSlice ? activeSlice.count : pieTotal }}
-            </span>
-            <span class="mt-1 line-clamp-2 text-[10.5px] font-bold uppercase leading-tight tracking-wide text-ink-500">
-              {{ activeSlice ? activeSlice.name : 'activas' }}
-            </span>
+          <!-- El agujero mide ~52 % del ancho: el texto se limita a ese círculo y escala con el gráfico. -->
+          <div class="pointer-events-none absolute inset-0 grid place-items-center">
+            <div class="flex w-[40%] flex-col items-center text-center">
+              <span class="text-[13cqw] font-extrabold tabular-nums leading-none text-ink-900">
+                {{ activeSlice ? activeSlice.count : pieTotal }}
+              </span>
+              <span
+                class="mt-[1.5cqw] line-clamp-2 w-full break-words text-[4.2cqw] font-bold leading-tight text-ink-500"
+                :class="activeSlice ? '' : 'uppercase tracking-wide'"
+              >
+                {{ activeSlice ? activeSlice.name : 'activas' }}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div class="mt-4 w-full text-center">
+        <!-- Alto fijo: si el panel cambiara de tamaño al hacer hover, la lista se movería y el hover parpadearía. -->
+        <div class="mt-4 flex h-[4.5rem] w-full flex-col justify-center text-center">
           <div
             v-if="activeSlice"
             class="rounded-xl border border-accent-300 bg-accent-50/70 p-2.5 shadow-xs"

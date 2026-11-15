@@ -8,12 +8,16 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build"
+    "type-check": "vue-tsc --build",
+    "build:widget": "pnpm --filter @pixi/pixibot-widget build",
+    "predev": "pnpm build:widget",
+    "prebuild": "pnpm build:widget"
   },
   "dependencies": {
     "@fontsource/nunito": "^5.3.0",
     "@fontsource/pixelify-sans": "^5.3.0",
     "@mdi/font": "^7.4.47",
+    "@pixi/pixibot-widget": "workspace:*",
     "axios": "^1.21.0",
     "pinia": "^4.1.0",
     "vue": "^3.5.42",

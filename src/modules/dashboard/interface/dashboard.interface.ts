@@ -40,6 +40,8 @@ export interface UserIncident {
   slaTime: string
   slaStatus: 'normal' | 'warning' | 'critical'
   createdAt: string
+  /** true si la incidencia está asignada a la persona en sesión */
+  assignedToMe?: boolean
 }
 
 /** Respuesta completa del endpoint (mock) del dashboard */
@@ -48,7 +50,7 @@ export interface DashboardSnapshot {
   userIncidents: UserIncident[]
   /** Horas promedio de resolución */
   mttrHours: number
-  /** Porcentaje 0-100 de tickets dentro de SLA */
+  /** Porcentaje 0-100 de incidencias atendidas dentro del plazo */
   slaCompliance: number
   resolvedSprint: number
 }

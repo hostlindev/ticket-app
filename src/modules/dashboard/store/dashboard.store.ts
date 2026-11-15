@@ -167,11 +167,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   const assignedApps = computed(() => apps.value.filter((app) => app.assigned))
 
-  // Cola personal: incidencias activas de los sistemas a cargo del usuario.
-  const assignedIncidents = computed(() => {
-    const names = new Set(assignedApps.value.map((app) => app.name))
-    return userIncidents.value.filter((i) => names.has(i.systemName) && i.status !== 'resolved')
-  })
+  // Cola personal: incidencias activas asignadas directamente al usuario en sesión.
+  const assignedIncidents = computed(() =>
+    userIncidents.value.filter((i) => i.assignedToMe && i.status !== 'resolved'),
+  )
 
   const userMetrics = computed<UserDashboardMetrics>(() => ({
     assignedSystemsCount: assignedApps.value.length,
@@ -182,11 +181,39 @@ export const useDashboardStore = defineStore('dashboard', () => {
     slaCompliance: formatPercent(slaCompliance.value),
   }))
 
-  // Tab "todas / a mi cargo": solo afecta a la gráfica y al listado
+  const myIncidents = assignedIncidents
+
+  /**
+   * Apps visibles para la persona: un desarrollador/agente ve solo los sistemas
+   * a los que está asignado; un administrador supervisa todos.
+   */
+  const scopedApps = computed<DashboardAppStats[]>(() =>
+    auth.user?.role === 'admin' ? apps.value : assignedApps.value,
+  )
+
+  /** Cada app con solo las incidencias asignadas a la persona (para la pestaña "A mi cargo"). */
+  const myApps = computed<DashboardAppStats[]>(() =>
+    scopedApps.value.map((app) => {
+      const severity = emptySeverity()
+      const mine = myIncidents.value.filter((i) => i.systemName === app.name)
+      for (const incident of mine) severity[incident.severity] += 1
+
+      return { ...app, severity, active: mine.length }
+    }),
+  )
+
+  // Pestaña "Todas / A mi cargo": solo afecta a la gráfica y al listado
+  //  - Todas: todas las incidencias de los sistemas de la persona.
+  //  - A mi cargo: solo las incidencias asignadas a ella, repartidas entre esos sistemas.
   const displayedApps = computed<DashboardAppStats[]>(() => {
-    const list = systemTab.value === 'mine' ? assignedApps.value : apps.value
+    const list = systemTab.value === 'mine' ? myApps.value : scopedApps.value
     return [...list].sort((a, b) => b.active - a.active)
   })
+
+  const tabCounts = computed(() => ({
+    all: scopedApps.value.reduce((acc, app) => acc + app.active, 0),
+    mine: myIncidents.value.length,
+  }))
 
   const pieTotal = computed<number>(() => displayedApps.value.reduce((acc, app) => acc + app.active, 0))
 
@@ -266,6 +293,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     trendMax,
     userMetrics,
     displayedApps,
+    tabCounts,
     pieTotal,
     pieSlices,
     activeSlice,

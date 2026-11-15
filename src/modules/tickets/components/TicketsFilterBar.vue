@@ -22,15 +22,13 @@ const severityOptions: Array<{ label: string; value: SeverityFilter }> = [
   { label: 'P2 · Alta', value: 'P2' },
   { label: 'P3 · Media', value: 'P3' },
   { label: 'P4 · Baja', value: 'P4' },
-  { label: 'Por clasificar', value: 'pending' },
 ]
 
 const statusOptions: Array<{ label: string; value: TicketStatus | 'all' }> = [
   { label: 'Todos', value: 'all' },
-  { label: 'Abiertos', value: 'open' },
-  { label: 'En progreso', value: 'in_progress' },
+  { label: 'Abiertos (sin asignar)', value: 'open' },
   { label: 'En revisión', value: 'in_review' },
-  { label: 'Resueltos', value: 'resolved' },
+  { label: 'Resueltos (cerrados)', value: 'resolved' },
 ]
 
 const hasActiveFilters = computed(

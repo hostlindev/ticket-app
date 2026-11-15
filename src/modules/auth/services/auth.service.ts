@@ -1,4 +1,5 @@
-import http from '@core/api/http'
+import http, { type ApiResponse } from '@core/api/http'
+import { USE_MOCK } from '@core/api/config'
 import type {
   AuthError,
   AuthUser,
@@ -11,7 +12,6 @@ export const DEMO_CREDENTIALS = {
   password: 'Ticket123!',
 } as const
 
-const USE_MOCK = (import.meta.env.VITE_USE_MOCK ?? 'true') !== 'false'
 const LATENCY_MS = 800
 const SESSION_TTL_MS = 8 * 60 * 60 * 1_000
 
@@ -66,13 +66,13 @@ function issueDemoToken(): string {
 
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
   if (!USE_MOCK) {
-    const { data } = await http.post<LoginResponse>('/auth/login', {
+    const { data: body } = await http.post<ApiResponse<LoginResponse>>('/auth/login', {
       email: credentials.email,
       password: credentials.password,
       remember: credentials.remember,
     })
 
-    return data
+    return body.data
   }
 
   await delay(LATENCY_MS)
@@ -109,6 +109,6 @@ export async function fetchCurrentUser(): Promise<AuthUser> {
     return DEMO_USER
   }
 
-  const { data } = await http.get<AuthUser>('/auth/me')
-  return data
+  const { data: body } = await http.get<ApiResponse<AuthUser>>('/auth/me')
+  return body.data
 }

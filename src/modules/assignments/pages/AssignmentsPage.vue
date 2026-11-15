@@ -2,19 +2,54 @@
 import { onMounted, ref } from 'vue'
 import AppLayout from '@core/layouts/AppLayout.vue'
 import { useToast } from '@core/composables/useToast'
+import { errorMessage } from '@core/api/errors'
 import { useAssignments } from '../composables/useAssignments'
-import type { Developer, SystemAssignment } from '../interface/assignment.interface'
+import type { Developer, NewSystemInput, SystemAssignment } from '../interface/assignment.interface'
 import AssignmentsSummaryCards from '../components/AssignmentsSummaryCards.vue'
 import AssignmentsToolbar from '../components/AssignmentsToolbar.vue'
 import SystemAssignmentCard from '../components/SystemAssignmentCard.vue'
 import AssignDevelopersDialog from '../components/AssignDevelopersDialog.vue'
+import CreateSystemDialog from '../components/CreateSystemDialog.vue'
 
-const { filteredSystems, systems, isLoading, hasLoaded, isSaving, error, load, saveDevelopers, resetFilters } =
+const { filteredSystems, systems, isLoading, hasLoaded, isSaving, error, load, saveDevelopers, addSystem, editSystem, removeSystem, resetFilters } =
   useAssignments()
 const toast = useToast()
 
 const dialogOpen = ref(false)
+const createOpen = ref(false)
 const editingId = ref<string | null>(null)
+const formSystemId = ref<string | null>(null)
+const deleting = ref<SystemAssignment | null>(null)
+const deleteOpen = ref(false)
+
+const formSystem = () => systems.value.find((s) => s.id === formSystemId.value) ?? null
+
+function openCreate(): void {
+  formSystemId.value = null
+  createOpen.value = true
+}
+
+function openEdit(system: SystemAssignment): void {
+  formSystemId.value = system.id
+  createOpen.value = true
+}
+
+function openDelete(system: SystemAssignment): void {
+  deleting.value = system
+  deleteOpen.value = true
+}
+
+async function confirmDelete(): Promise<void> {
+  const system = deleting.value
+  if (!system) return
+  try {
+    await removeSystem(system.id)
+    toast.success(`${system.name} eliminado`)
+    deleteOpen.value = false
+  } catch (err) {
+    toast.error(errorMessage(err, 'No pudimos eliminar el sistema.'))
+  }
+}
 
 // El dialog siempre recibe la versión más reciente del sistema desde el store.
 const editing = () => systems.value.find((s) => s.id === editingId.value) ?? null
@@ -30,7 +65,30 @@ async function handleSave(systemId: string, ids: string[]): Promise<void> {
     toast.success('Equipo actualizado')
     dialogOpen.value = false
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : 'No pudimos guardar los cambios.')
+    toast.error(errorMessage(err, 'No pudimos guardar los cambios.'))
+  }
+}
+
+async function handleCreate(input: NewSystemInput): Promise<void> {
+  const target = formSystem()
+  if (target) {
+    try {
+      await editSystem(target.id, input)
+      toast.success(`${input.name} actualizado`)
+      createOpen.value = false
+    } catch (err) {
+      toast.error(errorMessage(err, 'No pudimos actualizar el sistema.'))
+    }
+    return
+  }
+
+  try {
+    const created = await addSystem(input)
+    toast.success(`${created.name} registrado`)
+    createOpen.value = false
+    openManage(created)
+  } catch (err) {
+    toast.error(errorMessage(err, 'No pudimos registrar el sistema.'))
   }
 }
 
@@ -40,7 +98,7 @@ async function handleRemove(system: SystemAssignment, developer: Developer): Pro
     await saveDevelopers(system.id, ids)
     toast.success(`${developer.name} ya no atiende ${system.name}`)
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : 'No pudimos quitar al desarrollador.')
+    toast.error(errorMessage(err, 'No pudimos quitar al desarrollador.'))
   }
 }
 
@@ -54,6 +112,17 @@ onMounted(load)
   >
     <div class="space-y-5 sm:space-y-6">
       <AssignmentsSummaryCards />
+      <div class="flex justify-end">
+        <v-btn
+          color="primary"
+          variant="flat"
+          class="rounded-lg font-bold"
+          prepend-icon="mdi-plus"
+          @click="openCreate"
+        >
+          Nuevo sistema
+        </v-btn>
+      </div>
       <AssignmentsToolbar />
 
       <v-alert v-if="error" type="error" variant="tonal" class="rounded-xl" closable>
@@ -106,10 +175,35 @@ onMounted(load)
           :busy="isSaving"
           @manage="openManage"
           @remove="handleRemove"
+          @edit="openEdit"
+          @delete="openDelete"
         />
       </div>
     </div>
 
+    <CreateSystemDialog v-model="createOpen" :system="formSystem()" @create="handleCreate" />
+    <v-dialog v-model="deleteOpen" max-width="440" :persistent="isSaving">
+      <div class="console-card rounded-xl border border-silver-300 bg-white p-5 shadow-xl">
+        <h2 class="m-0 text-lg font-bold text-ink-900">Eliminar sistema</h2>
+        <p class="mt-2 text-[13.5px] text-ink-600">
+          ¿Seguro que quieres eliminar <strong>{{ deleting?.name }}</strong>? Se quitará su equipo asignado y esta acción no se
+          puede deshacer.
+        </p>
+        <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <v-btn variant="text" class="rounded-lg font-bold" :disabled="isSaving" @click="deleteOpen = false">Cancelar</v-btn>
+          <v-btn
+            color="error"
+            variant="flat"
+            class="rounded-lg font-bold"
+            prepend-icon="mdi-trash-can-outline"
+            :loading="isSaving"
+            @click="confirmDelete"
+          >
+            Eliminar
+          </v-btn>
+        </div>
+      </div>
+    </v-dialog>
     <AssignDevelopersDialog v-model="dialogOpen" :system="editing()" @save="handleSave" />
   </AppLayout>
 </template>

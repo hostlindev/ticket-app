@@ -31,7 +31,7 @@ const department = computed(() => user.value?.department ?? 'Frontend & Web Plat
           Bienvenido, {{ firstName }}
         </h2>
         <p class="mt-1 text-[13px] leading-relaxed text-ink-500">
-          Tienes <strong>{{ userMetrics.assignedIncidentsCount }} incidencias reportadas</strong> por usuarios en tus <strong>{{ userMetrics.assignedSystemsCount }} aplicaciones web a cargo</strong>.
+          Tienes <strong>{{ userMetrics.assignedIncidentsCount }} {{ userMetrics.assignedIncidentsCount === 1 ? 'incidencia asignada' : 'incidencias asignadas' }}</strong> a ti, en tus <strong>{{ userMetrics.assignedSystemsCount }} {{ userMetrics.assignedSystemsCount === 1 ? 'aplicación web a cargo' : 'aplicaciones web a cargo' }}</strong>.
         </p>
       </div>
     </div>

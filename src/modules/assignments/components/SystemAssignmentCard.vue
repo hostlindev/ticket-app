@@ -10,6 +10,8 @@ defineProps<{
 const emit = defineEmits<{
   manage: [system: SystemAssignment]
   remove: [system: SystemAssignment, developer: Developer]
+  edit: [system: SystemAssignment]
+  delete: [system: SystemAssignment]
 }>()
 </script>
 
@@ -39,9 +41,34 @@ const emit = defineEmits<{
       >
         {{ system.developers.length ? `${system.developers.length} dev` : 'Sin equipo' }}
       </span>
+      <v-menu location="bottom end">
+        <template #activator="{ props: menuProps }">
+          <button
+            v-bind="menuProps"
+            type="button"
+            class="grid size-7 shrink-0 place-items-center rounded-lg text-ink-500 transition-colors hover:bg-silver-100 hover:text-ink-900 disabled:opacity-40"
+            :aria-label="`Opciones de ${system.name}`"
+            :disabled="busy"
+          >
+            <v-icon icon="mdi-dots-vertical" size="18" />
+          </button>
+        </template>
+        <v-list density="compact" class="rounded-lg">
+          <v-list-item prepend-icon="mdi-pencil-outline" title="Editar sistema" @click="emit('edit', system)" />
+          <v-list-item
+            prepend-icon="mdi-trash-can-outline"
+            title="Eliminar sistema"
+            base-color="error"
+            @click="emit('delete', system)"
+          />
+        </v-list>
+      </v-menu>
     </header>
 
     <div class="mt-4 flex-1">
+      <p v-if="system.description" class="m-0 mb-3 line-clamp-2 text-[12.5px] text-ink-600">
+        {{ system.description }}
+      </p>
       <ul v-if="system.developers.length" class="m-0 flex list-none flex-wrap gap-2 p-0">
         <li
           v-for="dev in system.developers"
@@ -54,12 +81,12 @@ const emit = defineEmits<{
           <span class="min-w-0 truncate text-[12.5px] font-semibold text-ink-800">{{ dev.name }}</span>
           <button
             type="button"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-ink-500 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-40"
+            class="inline-flex size-5 shrink-0 items-center justify-center rounded-full p-0 leading-none text-ink-500 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-40"
             :aria-label="`Quitar a ${dev.name} de ${system.name}`"
             :disabled="busy"
             @click="emit('remove', system, dev)"
           >
-            <v-icon icon="mdi-close" size="13" />
+            <v-icon icon="mdi-close" size="13" class="!flex !size-[13px] items-center justify-center !leading-none" />
           </button>
         </li>
       </ul>

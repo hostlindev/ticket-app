@@ -9,8 +9,8 @@ const kpis = computed(() => [
   { key: 'total', icon: 'mdi-ticket-outline', label: 'Incidencias totales', value: totals.value.total, tone: 'text-ink-900' },
   { key: 'active', icon: 'mdi-alert-circle-outline', label: 'Activas', value: totals.value.active, tone: 'text-amber-700' },
   { key: 'resolved', icon: 'mdi-check-circle-outline', label: 'Resueltas', value: totals.value.resolved, tone: 'text-emerald-700' },
-  { key: 'mttr', icon: 'mdi-timer-outline', label: 'MTTR', value: userMetrics.value.mttrHours, tone: 'text-ink-900' },
-  { key: 'sla', icon: 'mdi-shield-check-outline', label: 'Cumplimiento SLA', value: userMetrics.value.slaCompliance, tone: 'text-emerald-700' },
+  { key: 'mttr', icon: 'mdi-timer-outline', label: 'Tiempo de solución', value: userMetrics.value.mttrHours, tone: 'text-ink-900' },
+  { key: 'sla', icon: 'mdi-shield-check-outline', label: 'Atendidas a tiempo', value: userMetrics.value.slaCompliance, tone: 'text-emerald-700' },
 ])
 </script>
 

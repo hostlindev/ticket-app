@@ -25,6 +25,19 @@ const issue = computed(() => ISSUE_TYPES[props.ticket.issueType])
 const created = computed(() => formatRelativeTime(props.ticket.createdAt))
 const borderClass = computed(() => (props.ticket.severity ? SEVERITY_BORDER[props.ticket.severity] : 'border-l-silver-300'))
 const slaUrgent = computed(() => (props.ticket.slaMinutesRemaining ?? 0) <= 60)
+const isDone = computed(() => props.ticket.status === 'resolved' || props.ticket.status === 'closed')
+
+/** 45 min · 2 h 10 min · 1 d 3 h */
+const remainingLabel = computed(() => {
+  const total = props.ticket.slaMinutesRemaining ?? 0
+  if (total < 60) return `${total} min`
+  if (total < 1440) {
+    const minutes = total % 60
+    return `${Math.floor(total / 60)} h${minutes ? ` ${minutes} min` : ''}`
+  }
+  const hours = Math.floor((total % 1440) / 60)
+  return `${Math.floor(total / 1440)} d${hours ? ` ${hours} h` : ''}`
+})
 </script>
 
 <template>
@@ -85,23 +98,25 @@ const slaUrgent = computed(() => (props.ticket.slaMinutesRemaining ?? 0) <= 60)
           v-if="ticket.slaMinutesRemaining === null"
           class="inline-flex items-center gap-1.5 justify-self-start rounded-full border border-dashed border-silver-400 px-2.5 py-0.5 text-[11.5px] font-bold text-ink-500"
         >
-          <v-icon icon="mdi-timer-sand" size="14" />
-          <span>Sin SLA aún</span>
+          <v-icon :icon="isDone ? 'mdi-check' : 'mdi-timer-sand'" size="14" />
+          <span>{{ isDone ? 'Atendida' : 'Plazo por definir' }}</span>
         </div>
         <div
           v-else-if="ticket.slaMinutesRemaining > 0"
           class="inline-flex items-center gap-1.5 justify-self-start rounded-full border px-2.5 py-0.5 text-[12px] font-bold"
           :class="slaUrgent ? 'border-red-200 bg-red-50 text-red-700' : 'border-amber-200 bg-amber-50 text-amber-800'"
+          title="Tiempo que queda para atender este reporte dentro del plazo"
         >
           <v-icon icon="mdi-clock-outline" size="14" />
-          <span>{{ ticket.slaMinutesRemaining }}m SLA</span>
+          <span>Quedan {{ remainingLabel }}</span>
         </div>
         <div
           v-else
-          class="inline-flex items-center gap-1.5 justify-self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[12px] font-bold text-emerald-700"
+          class="inline-flex items-center gap-1.5 justify-self-start rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[12px] font-bold text-red-700"
+          title="Ya pasó el tiempo para atender este reporte"
         >
-          <v-icon icon="mdi-check" size="14" />
-          <span>SLA Ok</span>
+          <v-icon icon="mdi-clock-alert-outline" size="14" />
+          <span>Plazo vencido</span>
         </div>
 
         <div class="min-w-0 justify-self-end text-right text-[11.5px] text-ink-500 lg:justify-self-auto">

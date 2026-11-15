@@ -1,6 +1,14 @@
 export type TicketSeverity = 'P1' | 'P2' | 'P3' | 'P4'
 
+/** Flujo: open (sin dueño) -> in_review (un desarrollador la tomó) -> resolved (cerrada). `in_progress` y `closed` son valores heredados. */
 export type TicketStatus = 'open' | 'in_progress' | 'in_review' | 'resolved' | 'closed'
+
+/** Reduce los estados heredados a los tres vigentes. */
+export function normalizeStatus(status: TicketStatus): 'open' | 'in_review' | 'resolved' {
+  if (status === 'in_progress' || status === 'in_review') return 'in_review'
+  if (status === 'closed' || status === 'resolved') return 'resolved'
+  return 'open'
+}
 
 /** Tipo de problema que elige el propio usuario al reportar (lenguaje no técnico). */
 export type IssueType = 'blocks_flow' | 'not_working' | 'wrong_info' | 'slow' | 'visual' | 'other'
@@ -10,6 +18,12 @@ export interface TicketAssignee {
   name: string
   email: string
   role?: string
+}
+
+/** Quien resolvió el reporte; se conserva aunque ya no esté en la plataforma. */
+export interface TicketResolver extends TicketAssignee {
+  /** true si la persona fue eliminada de la plataforma */
+  removed: boolean
 }
 
 /** Usuario del sistema que envió el reporte. */
@@ -42,11 +56,13 @@ export interface Ticket {
   ipAddress: string
   createdAt: string
   assignee?: TicketAssignee
-  /** Minutos restantes de SLA; null si aún no hay severidad */
+  /** Quien lo resolvió (null mientras siga activo) */
+  resolvedBy?: TicketResolver | null
+  /** Minutos que quedan para atenderla a tiempo (0 = plazo vencido); null si aún no tiene prioridad o ya se resolvió */
   slaMinutesRemaining: number | null
 }
 
-export type SeverityFilter = TicketSeverity | 'pending' | 'all'
+export type SeverityFilter = TicketSeverity | 'all'
 
 /** Parámetros que se envían al backend para listar reportes. */
 export interface TicketsQuery {
@@ -76,7 +92,8 @@ export interface Paginated<T> {
 export interface TicketsSummary {
   total: number
   criticalP1: number
-  pending: number
+  /** Activas de prioridad baja (P4); incluye los reportes de tipo "Otro" */
+  lowPriority: number
   inProgress: number
   resolved: number
   systems: string[]

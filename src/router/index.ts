@@ -5,6 +5,7 @@ import { authRoutes } from '@modules/auth/routes'
 import { dashboardRoutes } from '@modules/dashboard/routes'
 import { ticketsRoutes } from '@modules/tickets/routes'
 import { assignmentsRoutes } from '@modules/assignments/routes'
+import { usersRoutes } from '@modules/users/routes'
 import type { UserRole } from '@modules/auth/interface/auth.interface'
 
 declare module 'vue-router' {
@@ -22,6 +23,7 @@ const routes: RouteRecordRaw[] = [
   ...dashboardRoutes,
   ...ticketsRoutes,
   ...assignmentsRoutes,
+  ...usersRoutes,
   {
     path: '/:pathMatch(.*)*',
     redirect: { name: 'dashboard.home' },

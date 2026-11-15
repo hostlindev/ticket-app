@@ -8,7 +8,7 @@ import { usePaletteStore, PALETTES, type PaletteId } from '@core/stores/palette.
 import PixelBuddy from '@core/components/PixelBuddy.vue'
 
 const auth = useAuthStore()
-const { user, firstName, userInitials } = storeToRefs(auth)
+const { user, userInitials } = storeToRefs(auth)
 
 const paletteStore = usePaletteStore()
 const theme = useTheme()
@@ -86,7 +86,7 @@ function openFullProfile(): void {
           <!-- User Name and Compact Role -->
           <div class="hidden text-left sm:block">
             <span class="block max-w-[140px] truncate text-[12.5px] font-bold leading-tight text-white">
-              {{ firstName }}
+              {{ user?.name }}
             </span>
             <span class="block max-w-[140px] truncate text-[10.5px] font-medium text-white/80">
               {{ user?.department ?? 'Soporte Web' }}

@@ -10,7 +10,7 @@ const { userMetrics } = useDashboard()
     <div>
       <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
         <span class="text-[11px] font-bold uppercase tracking-wider text-ink-500">
-          Incidencias de Usuarios Asignadas
+          Incidencias asignadas a ti
         </span>
         <span
           v-if="userMetrics.assignedCriticalCount > 0"
@@ -18,7 +18,7 @@ const { userMetrics } = useDashboard()
         >
           <span class="size-1.5 rounded-full bg-red-500" aria-hidden="true" />
           <span class="tabular-nums">{{ userMetrics.assignedCriticalCount }}</span>
-          <span>P1 Críticas</span>
+          <span>Críticas</span>
         </span>
       </div>
 
@@ -26,7 +26,7 @@ const { userMetrics } = useDashboard()
         <span class="text-3xl font-extrabold tracking-tight text-ink-900">
           {{ userMetrics.assignedIncidentsCount }}
         </span>
-        <span class="text-[13px] font-medium text-ink-500">tickets en tu cola de triage</span>
+        <span class="text-[13px] font-medium text-ink-500">incidencias por atender</span>
       </div>
 
       <p class="mt-2 text-[12.5px] leading-relaxed text-ink-500">
@@ -35,7 +35,7 @@ const { userMetrics } = useDashboard()
     </div>
 
     <div class="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-silver-200 pt-2.5">
-      <span class="text-[11.5px] text-ink-500">SLA: <strong class="text-emerald-700">{{ userMetrics.slaCompliance }}</strong></span>
+      <span class="text-[11.5px] text-ink-500">Atendidas a tiempo: <strong class="text-emerald-700">{{ userMetrics.slaCompliance }}</strong></span>
       <RouterLink
         to="/tickets"
         class="text-[12px] font-bold text-accent-600 hover:text-accent-700 hover:underline"

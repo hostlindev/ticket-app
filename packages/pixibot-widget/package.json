@@ -1,0 +1,28 @@
+{
+  "name": "@pixi/pixibot-widget",
+  "version": "0.1.0",
+  "description": "Pixibot: widget flotante para reportar incidencias desde cualquier sistema.",
+  "type": "module",
+  "main": "./dist/pixibot.js",
+  "module": "./dist/pixibot.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/pixibot.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.json",
+    "dev": "vite build --watch"
+  },
+  "dependencies": {
+    "html2canvas-pro": "^1.5.11"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.0",
+    "vite": "^8.2.2"
+  }
+}

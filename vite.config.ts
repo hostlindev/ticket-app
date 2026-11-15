@@ -8,6 +8,8 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // node_modules/.vite quedó con dueño root; se usa otra carpeta de caché.
+  cacheDir: 'node_modules/.vite-cache',
   plugins: [
     vue(),
     vuetify({ autoImport: true }),

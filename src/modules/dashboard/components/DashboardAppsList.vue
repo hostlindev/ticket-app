@@ -38,7 +38,7 @@ function toggle(id: string) {
         <div
           v-for="slice in pieSlices"
           :key="slice.id"
-          class="cursor-pointer rounded-xl border p-3 transition-all"
+          class="cursor-pointer rounded-xl border p-3 transition-colors duration-150"
           :class="
             activeSliceId === slice.id
               ? 'border-accent-400 bg-accent-50/60 shadow-xs'
@@ -108,23 +108,6 @@ function toggle(id: string) {
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="mt-5 flex flex-col gap-3 rounded-xl border border-accent-200 bg-accent-50/70 p-3.5 sm:flex-row sm:items-center sm:justify-between">
-      <div class="min-w-0">
-        <p class="text-[12.5px] font-bold text-ink-900">¿Revisar incidencias reportadas en producción?</p>
-        <p class="text-[11.5px] text-ink-500">
-          Accede a la cola filtrada por aplicación web o usuario final.
-        </p>
-      </div>
-
-      <RouterLink
-        to="/tickets"
-        class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm shadow-accent-600/25 transition-all hover:bg-accent-700"
-      >
-        <v-icon icon="mdi-alert-octagon-outline" size="14" />
-        <span>Ver Incidencias Web</span>
-      </RouterLink>
     </div>
   </div>
 </template>
