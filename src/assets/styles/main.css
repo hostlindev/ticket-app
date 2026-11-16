@@ -251,6 +251,55 @@ h3 {
   }
 }
 
+/* Botón de acción principal: color del tema, borde oscuro y sombra dura. */
+.pixel-action {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 2px solid var(--color-accent-700);
+  border-radius: 9px;
+  background: var(--color-accent-600);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 0 var(--shadow-accent);
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background 0.12s ease;
+}
+.pixel-action.is-icon {
+  width: 34px;
+  padding: 0;
+}
+.pixel-action:hover:not(:disabled) {
+  background: var(--color-accent-500);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 var(--shadow-accent);
+}
+.pixel-action:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 0 var(--shadow-accent);
+}
+.pixel-action:focus-visible {
+  outline: 3px solid var(--color-accent-300);
+  outline-offset: 2px;
+}
+.pixel-action:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixel-action {
+    transition: none;
+  }
+}
+
 .pixel-button.v-btn {
   border: 2px solid var(--color-ink-900);
   border-radius: 8px;

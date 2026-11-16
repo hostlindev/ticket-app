@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import AppLayout from '@core/layouts/AppLayout.vue'
+import RefreshButton from '@core/components/RefreshButton.vue'
 import { useTickets } from '../composables/useTickets'
 import { useTicketsStore } from '../store/tickets.store'
 import type { Ticket } from '../interface/ticket.interface'
@@ -10,7 +11,7 @@ import TicketsPagination from '../components/TicketsPagination.vue'
 import TicketsList from '../components/TicketsList.vue'
 import TicketDetailModal from '../components/TicketDetailModal.vue'
 
-const { init } = useTickets()
+const { init, isLoading } = useTickets()
 
 const store = useTicketsStore()
 
@@ -36,6 +37,10 @@ onMounted(() => {
     title="Incidencias de aplicaciones web"
     subtitle="Reportes que envían los usuarios desde tus sistemas: lo que escribieron, su captura y los datos del reporte."
   >
+    <template #header-actions>
+      <RefreshButton variant="text" :loading="isLoading" @click="init" />
+    </template>
+
     <div class="space-y-5 sm:space-y-6">
       <TicketsMetricsCards />
       <TicketsFilterBar />

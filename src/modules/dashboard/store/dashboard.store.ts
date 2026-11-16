@@ -76,6 +76,8 @@ function formatPercent(value: number): string {
 }
 
 const WEEKDAY_FORMAT = new Intl.DateTimeFormat('es', { weekday: 'short' })
+const DAY_MONTH_FORMAT = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' })
+const FULL_DATE_FORMAT = new Intl.DateTimeFormat('es', { dateStyle: 'full' })
 
 export const useDashboardStore = defineStore('dashboard', () => {
   const auth = useAuthStore()
@@ -155,6 +157,9 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
       return {
         label: WEEKDAY_FORMAT.format(date).replace('.', ''),
+        dayMonth: DAY_MONTH_FORMAT.format(date).replace('.', ''),
+        year: String(date.getFullYear()),
+        fullDate: FULL_DATE_FORMAT.format(date),
         created: rawApps.value.reduce((acc, app) => acc + (app.created[i] ?? 0), 0),
         resolved: rawApps.value.reduce((acc, app) => acc + (app.resolved[i] ?? 0), 0),
       }

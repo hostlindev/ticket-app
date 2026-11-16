@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import RefreshButton from '@core/components/RefreshButton.vue'
 import { useDashboard } from '../composables/useDashboard'
 import { STATUS_META } from '../config/dashboard.config'
 
-const { statusStats, totals } = useDashboard()
+const { statusStats, totals, loading, refreshData } = useDashboard()
 </script>
 
 <template>
@@ -12,7 +13,10 @@ const { statusStats, totals } = useDashboard()
         <h3 class="text-lg font-bold text-ink-900">Estado de las incidencias</h3>
         <p class="text-[12px] text-ink-500">Distribución del total histórico por etapa de atención.</p>
       </div>
-      <span class="text-[12px] font-bold text-ink-700">{{ totals.total }} en total</span>
+      <div class="flex items-center gap-2">
+        <span class="text-[12px] font-bold text-ink-700">{{ totals.total }} en total</span>
+        <RefreshButton :loading="loading" @click="refreshData" />
+      </div>
     </div>
 
     <!-- Barra apilada -->

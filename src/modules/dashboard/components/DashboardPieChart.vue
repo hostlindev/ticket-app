@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RefreshButton from '@core/components/RefreshButton.vue'
 import { useDashboard } from '../composables/useDashboard'
 
 const {
@@ -10,6 +11,8 @@ const {
   activeSlice,
   setSystemTab,
   setActiveSliceId,
+  loading,
+  refreshData,
 } = useDashboard()
 
 function toggle(id: string) {
@@ -28,6 +31,7 @@ function toggle(id: string) {
           </p>
         </div>
 
+        <div class="flex items-center gap-2 self-start">
         <!-- Tab switcher -->
         <div class="inline-flex self-start rounded-lg border border-silver-200 bg-silver-100 p-0.5">
           <button
@@ -46,6 +50,8 @@ function toggle(id: string) {
           >
             A mi cargo ({{ tabCounts.mine }})
           </button>
+        </div>
+        <RefreshButton :loading="loading" @click="refreshData" />
         </div>
       </div>
 

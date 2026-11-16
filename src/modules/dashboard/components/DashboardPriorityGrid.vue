@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import RefreshButton from '@core/components/RefreshButton.vue'
 import { useDashboard } from '../composables/useDashboard'
 import { SEVERITY_META } from '../config/dashboard.config'
 
-const { priorityStats, totals } = useDashboard()
+const { priorityStats, totals, loading, refreshData } = useDashboard()
 </script>
 
 <template>
@@ -15,11 +16,14 @@ const { priorityStats, totals } = useDashboard()
         </p>
       </div>
 
-      <span
-        class="rounded-lg border border-silver-300 bg-white px-3 py-1 text-[12px] font-bold text-ink-700 shadow-xs"
-      >
-        Total activas: {{ totals.active }}
-      </span>
+      <div class="flex items-center gap-2">
+        <span
+          class="rounded-lg border border-silver-300 bg-white px-3 py-1 text-[12px] font-bold text-ink-700 shadow-xs"
+        >
+          Total activas: {{ totals.active }}
+        </span>
+        <RefreshButton :loading="loading" @click="refreshData" />
+      </div>
     </div>
 
     <div class="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4 lg:grid-cols-4">

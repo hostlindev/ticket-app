@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import RefreshButton from '@core/components/RefreshButton.vue'
 import { RouterLink } from 'vue-router'
 import { useDashboard } from '../composables/useDashboard'
 import { HEALTH_META, SEVERITIES, SEVERITY_META } from '../config/dashboard.config'
 
-const { pieSlices, activeSliceId, setActiveSliceId } = useDashboard()
+const { pieSlices, activeSliceId, setActiveSliceId, loading, refreshData } = useDashboard()
 
 function toggle(id: string) {
   setActiveSliceId(activeSliceId.value === id ? null : id)
@@ -21,6 +22,8 @@ function toggle(id: string) {
           </p>
         </div>
 
+        <div class="flex shrink-0 items-center gap-3">
+        <RefreshButton :loading="loading" @click="refreshData" />
         <RouterLink
           to="/tickets"
           class="hidden shrink-0 items-center gap-1 text-[12px] font-bold text-accent-600 hover:underline sm:inline-flex"
@@ -28,6 +31,7 @@ function toggle(id: string) {
           <span>Ver tickets</span>
           <v-icon icon="mdi-arrow-right" size="14" />
         </RouterLink>
+        </div>
       </div>
 
       <p v-if="!pieSlices.length" class="mt-4 rounded-xl border border-dashed border-silver-300 p-6 text-center text-[12.5px] text-ink-500">

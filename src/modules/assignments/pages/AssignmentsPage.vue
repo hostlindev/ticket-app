@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import AppLayout from '@core/layouts/AppLayout.vue'
+import ActionButton from '@core/components/ActionButton.vue'
+import RefreshButton from '@core/components/RefreshButton.vue'
 import { useToast } from '@core/composables/useToast'
 import { errorMessage } from '@core/api/errors'
 import { useAssignments } from '../composables/useAssignments'
@@ -110,18 +112,14 @@ onMounted(load)
     title="Asignación de equipo"
     subtitle="Define qué desarrolladores atienden los reportes de cada sistema."
   >
+    <template #header-actions>
+      <RefreshButton variant="text" :loading="isLoading" @click="load" />
+    </template>
+
     <div class="space-y-5 sm:space-y-6">
       <AssignmentsSummaryCards />
       <div class="flex justify-end">
-        <v-btn
-          color="primary"
-          variant="flat"
-          class="rounded-lg font-bold"
-          prepend-icon="mdi-plus"
-          @click="openCreate"
-        >
-          Nuevo sistema
-        </v-btn>
+        <ActionButton icon="mdi-plus" @click="openCreate">Nuevo sistema</ActionButton>
       </div>
       <AssignmentsToolbar />
 

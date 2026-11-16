@@ -88,6 +88,11 @@ export interface StatusStat {
 
 export interface TrendPoint {
   label: string
+  /** Ej. "15 nov" */
+  dayMonth: string
+  year: string
+  /** Ej. "domingo, 15 de noviembre de 2026" */
+  fullDate: string
   created: number
   resolved: number
 }

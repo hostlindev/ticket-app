@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import AppLayout from '@core/layouts/AppLayout.vue'
+import ActionButton from '@core/components/ActionButton.vue'
+import RefreshButton from '@core/components/RefreshButton.vue'
 import { useToast } from '@core/composables/useToast'
 import { errorMessage } from '@core/api/errors'
 import { useAuthStore } from '@modules/auth/store/auth.store'
@@ -77,11 +79,13 @@ const PILL_OFF =
 
 <template>
   <AppLayout title="Usuarios" subtitle="Administra quién tiene acceso a la plataforma y con qué rol.">
+    <template #header-actions>
+      <RefreshButton variant="text" :loading="isLoading" @click="load" />
+    </template>
+
     <div class="space-y-5 sm:space-y-6">
       <div class="flex justify-end">
-        <v-btn color="primary" variant="flat" class="rounded-lg font-bold" prepend-icon="mdi-account-plus-outline" @click="openCreate">
-          Nuevo usuario
-        </v-btn>
+        <ActionButton icon="mdi-account-plus-outline" @click="openCreate">Nuevo usuario</ActionButton>
       </div>
 
       <section class="console-card p-4 sm:p-5">
