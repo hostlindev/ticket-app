@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@modules/auth/store/auth.store'
 import type { UserRole } from '@modules/auth/interface/auth.interface'
 import { usePaletteStore, PALETTES, type PaletteId } from '@core/stores/palette.store'
 import PixelBuddy from '@core/components/PixelBuddy.vue'
+import ApiKeyRow from '@modules/assignments/components/ApiKeyRow.vue'
+import { useLedApiKeys } from '@modules/assignments/composables/useLedApiKeys'
 
 const auth = useAuthStore()
 const { user, userInitials } = storeToRefs(auth)
@@ -15,6 +17,11 @@ const theme = useTheme()
 
 const menuOpen = ref(false)
 const dialogOpen = ref(false)
+
+const keys = useLedApiKeys()
+watch(dialogOpen, (open) => {
+  if (open) void keys.load()
+})
 
 const ROLE_LABELS: Record<UserRole, { label: string; full: string; color: string }> = {
   admin: { label: 'Admin', full: 'Administrador de Plataforma', color: 'bg-purple-100 text-purple-700 border-purple-200' },
@@ -36,7 +43,7 @@ const paletteList = Object.values(PALETTES)
 
 function selectPalette(id: PaletteId): void {
   paletteStore.applyPalette(id)
-  theme.global.name.value = `pixi-${id}`
+  theme.change(`pixi-${id}`)
 }
 
 async function handleLogout(): Promise<void> {
@@ -44,6 +51,15 @@ async function handleLogout(): Promise<void> {
   await auth.logout()
   window.location.href = '/login'
 }
+
+/** Apps del diálogo: las asignadas + las que coordina aunque no figuren en la lista. */
+const monitoredApps = computed(() => {
+  const names = [...assignedApps.value]
+  for (const s of keys.led.value) {
+    if (!names.some((n) => n.trim().toLowerCase() === s.name.trim().toLowerCase())) names.push(s.name)
+  }
+  return names
+})
 
 function openFullProfile(): void {
   menuOpen.value = false
@@ -223,7 +239,7 @@ function openFullProfile(): void {
     <!-- Full Profile Dialog Modal -->
     <v-dialog v-model="dialogOpen" max-width="520">
       <div class="max-h-[90vh] overflow-y-auto rounded-2xl border-2 border-silver-300 bg-white p-4 sm:p-6 shadow-2xl text-ink-900">
-        <!-- Modal Header with Pixi Mascot -->
+        <!-- Modal Header with Pixibot Mascot -->
         <div class="flex items-start justify-between border-b border-silver-200 pb-4">
           <div class="flex items-center gap-3">
             <div class="grid h-12 w-12 place-items-center rounded-xl border-2 border-accent-600 bg-accent-500 text-white shadow-xs">
@@ -317,19 +333,40 @@ function openFullProfile(): void {
             <h5 class="text-[11.5px] font-bold uppercase tracking-wider text-ink-500 mb-2">
               Aplicaciones Web Monitoreadas
             </h5>
-            <div class="max-h-56 space-y-1.5 overflow-y-auto">
+            <p v-if="keys.error.value" class="mb-2 text-[12px] text-red-700">
+              {{ keys.error.value }} <button type="button" class="font-bold underline" @click="keys.load()">Reintentar</button>
+            </p>
+            <div class="max-h-72 space-y-1.5 overflow-y-auto">
               <div
-                v-for="app in assignedApps"
+                v-for="app in monitoredApps"
                 :key="app"
-                class="flex items-center justify-between rounded-lg border border-silver-200 bg-white p-2.5 shadow-2xs"
+                class="rounded-lg border border-silver-200 bg-white p-2.5 shadow-2xs"
               >
-                <div class="flex items-center gap-2">
-                  <v-icon icon="mdi-web" size="15" class="text-accent-600" />
-                  <span class="font-semibold text-ink-800">{{ app }}</span>
+                <div class="flex items-center justify-between">
+                  <div class="flex min-w-0 items-center gap-2">
+                    <v-icon icon="mdi-web" size="15" class="shrink-0 text-accent-600" />
+                    <span class="truncate font-semibold text-ink-800">{{ app }}</span>
+                    <span
+                      v-if="keys.keyFor(app)"
+                      class="shrink-0 rounded bg-accent-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-700"
+                    >
+                      Coordinador
+                    </span>
+                  </div>
+                  <span class="shrink-0 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[10.5px] font-bold">
+                    Activo
+                  </span>
                 </div>
-                <span class="rounded bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[10.5px] font-bold">
-                  Activo
-                </span>
+                <ApiKeyRow
+                  v-if="keys.keyFor(app)"
+                  :system="keys.keyFor(app)!"
+                  :visible="!!keys.visible.value[keys.keyFor(app)!.id]"
+                  :copied="keys.copied.value === keys.keyFor(app)!.id"
+                  :rotating="keys.rotating.value === keys.keyFor(app)!.id"
+                  @toggle="keys.visible.value[keys.keyFor(app)!.id] = !keys.visible.value[keys.keyFor(app)!.id]"
+                  @copy="keys.copy(keys.keyFor(app)!)"
+                  @rotate="keys.confirming.value = keys.keyFor(app)!"
+                />
               </div>
             </div>
           </div>
@@ -344,6 +381,36 @@ function openFullProfile(): void {
           >
             Cerrar
           </button>
+        </div>
+      </div>
+    </v-dialog>
+
+    <v-dialog
+      :model-value="!!keys.confirming.value"
+      max-width="420"
+      :persistent="!!keys.rotating.value"
+      @update:model-value="!keys.rotating.value && (keys.confirming.value = null)"
+    >
+      <div class="rounded-xl border border-silver-300 bg-white p-5 shadow-xl text-ink-900">
+        <h2 class="m-0 text-lg font-bold">Generar nueva API key</h2>
+        <p class="mt-2 text-[13.5px] text-ink-600">
+          Se creará una clave nueva para <strong>{{ keys.confirming.value?.name }}</strong> y la actual dejará de funcionar de
+          inmediato: el widget de ese sistema no podrá enviar reportes hasta que lo actualices con la nueva.
+        </p>
+        <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <v-btn variant="text" class="rounded-lg font-bold" :disabled="!!keys.rotating.value" @click="keys.confirming.value = null">
+            Cancelar
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            class="rounded-lg font-bold"
+            prepend-icon="mdi-autorenew"
+            :loading="!!keys.rotating.value"
+            @click="keys.confirmRotate()"
+          >
+            Generar nueva
+          </v-btn>
         </div>
       </div>
     </v-dialog>

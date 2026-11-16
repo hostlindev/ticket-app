@@ -13,6 +13,9 @@ export interface SystemAssignment {
   domain: string
   /** Descripción breve del sistema (opcional). */
   description?: string
+  /** Lead (coordinador) del proyecto. */
+  lead?: Developer | null
+  leadId?: string | null
   developers: Developer[]
 }
 
@@ -21,6 +24,8 @@ export interface NewSystemInput {
   name: string
   domain: string
   description?: string
+  /** Id del lead del proyecto (usuario de `GET /developers`). */
+  leadId: string
 }
 
 export type AssignmentFilter = 'all' | 'unassigned' | 'assigned'

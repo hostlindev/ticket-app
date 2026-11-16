@@ -12,11 +12,12 @@ const emit = defineEmits<{
 }>()
 
 const { xs } = useDisplay()
-const { isSaving, systems } = useAssignments()
+const { isSaving, systems, developers, developersLoading, developersError, loadDevelopers } = useAssignments()
 
 const name = ref('')
 const domain = ref('')
 const description = ref('')
+const leadId = ref<string | null>(null)
 const submitted = ref(false)
 
 const isEdit = computed(() => !!props.system)
@@ -31,7 +32,9 @@ watch(
     name.value = props.system?.name ?? ''
     domain.value = props.system?.domain ?? ''
     description.value = props.system?.description ?? ''
+    leadId.value = props.system?.lead?.id ?? props.system?.leadId ?? null
     submitted.value = false
+    if (developers.value.length === 0) void loadDevelopers()
   },
 )
 
@@ -59,8 +62,11 @@ const domainError = computed(() => {
   return ''
 })
 
+const leadError = computed(() => (leadId.value ? '' : 'Selecciona al coordinador del proyecto.'))
+
 const showName = computed(() => (submitted.value ? nameError.value : ''))
 const showDomain = computed(() => (submitted.value ? domainError.value : ''))
+const showLead = computed(() => (submitted.value ? leadError.value : ''))
 
 function close(): void {
   emit('update:modelValue', false)
@@ -68,11 +74,12 @@ function close(): void {
 
 function submit(): void {
   submitted.value = true
-  if (nameError.value || domainError.value) return
+  if (nameError.value || domainError.value || leadError.value || !leadId.value) return
   emit('create', {
     name: name.value.trim(),
     domain: normalizedDomain.value,
     description: description.value.trim() || undefined,
+    leadId: leadId.value,
   })
 }
 </script>
@@ -133,6 +140,23 @@ function submit(): void {
           :error-messages="showDomain"
           maxlength="253"
         />
+        <v-select
+          v-model="leadId"
+          :items="developers"
+          item-title="name"
+          item-value="id"
+          label="Coordinador del proyecto"
+          placeholder="Selecciona al coordinador"
+          prepend-inner-icon="mdi-account-star-outline"
+          :menu-props="{ location: 'bottom', offset: 6, maxHeight: 280 }"
+          :loading="developersLoading"
+          :error-messages="showLead || (developersError ? [developersError] : [])"
+          :no-data-text="developersLoading ? 'Cargando usuarios…' : 'No hay usuarios disponibles'"
+        >
+          <template #item="{ props: itemProps, item }">
+            <v-list-item v-bind="itemProps" :subtitle="item.email" />
+          </template>
+        </v-select>
         <v-textarea
           v-model="description"
           label="Descripción (opcional)"

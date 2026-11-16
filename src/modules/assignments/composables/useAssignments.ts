@@ -8,6 +8,7 @@ export function useAssignments() {
   return {
     ...refs,
     load: store.load,
+    loadDevelopers: store.loadDevelopers,
     saveDevelopers: store.saveDevelopers,
     addSystem: store.addSystem,
     editSystem: store.editSystem,

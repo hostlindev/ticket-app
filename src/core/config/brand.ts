@@ -3,7 +3,7 @@
  * Swap these values to rename the product without touching components.
  */
 export const brand = {
-  name: 'Pixi',
+  name: 'Pixibot',
   spirit: 'Reportes de tus sistemas',
   supportEmail: 'soporte@pixi.dev',
 } as const

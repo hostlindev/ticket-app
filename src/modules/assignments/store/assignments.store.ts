@@ -26,6 +26,8 @@ export const useAssignmentsStore = defineStore('assignments', () => {
   const hasLoaded = ref(false)
   const isSaving = ref(false)
   const error = ref<string | null>(null)
+  const developersLoading = ref(false)
+  const developersError = ref<string | null>(null)
 
   const search = ref('')
   const filter = ref<AssignmentFilter>('all')
@@ -81,6 +83,19 @@ export const useAssignmentsStore = defineStore('assignments', () => {
       error.value = errorMessage(err, 'No pudimos cargar los sistemas.')
     } finally {
       isLoading.value = false
+    }
+  }
+
+  /** Carga (o recarga) solo la lista de usuarios seleccionables como lead/desarrolladores. */
+  async function loadDevelopers(): Promise<void> {
+    developersLoading.value = true
+    developersError.value = null
+    try {
+      developers.value = await getDevelopers()
+    } catch (err) {
+      developersError.value = errorMessage(err, 'No pudimos cargar la lista de usuarios.')
+    } finally {
+      developersLoading.value = false
     }
   }
 
@@ -147,12 +162,15 @@ export const useAssignmentsStore = defineStore('assignments', () => {
     hasLoaded,
     isSaving,
     error,
+    developersLoading,
+    developersError,
     search,
     filter,
     summary,
     filteredSystems,
     workload,
     load,
+    loadDevelopers,
     saveDevelopers,
     addSystem,
     editSystem,

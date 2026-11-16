@@ -8,7 +8,7 @@ utilidades) + Axios.
 
 ## Marca
 
-La identidad de **Pixi** está centralizada para poder cambiarla sin tocar la UI:
+La identidad de **Pixibot** está centralizada para poder cambiarla sin tocar la UI:
 
 - `src/core/config/brand.ts` → nombre, tagline y correo de soporte.
 - `src/core/components/PixelBuddy.vue` → mascota pixel (SVG).

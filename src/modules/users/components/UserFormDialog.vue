@@ -146,7 +146,7 @@ function submit(): void {
           hide-details="auto"
         >
           <template #item="{ props: itemProps, item }">
-            <v-list-item v-bind="itemProps" :subtitle="item.raw.description" />
+            <v-list-item v-bind="itemProps" :subtitle="item.description" />
           </template>
         </v-select>
         <div class="grid gap-4 sm:grid-cols-2">

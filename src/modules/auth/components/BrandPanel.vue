@@ -47,7 +47,7 @@ const features: Array<{ icon: PixelIconName; title: string; text: string }> = [
         y quién las está atendiendo.
       </p>
 
-      <!-- Pixi habla -->
+      <!-- Pixibot habla -->
       <div class="mt-8 flex items-end gap-4">
         <PixelBuddy :size="84" bob class="shrink-0" />
         <div
@@ -59,7 +59,7 @@ const features: Array<{ icon: PixelIconName; title: string; text: string }> = [
             aria-hidden="true"
           />
           <p class="font-pixel text-lg leading-tight text-ink-900">
-            ¡Hola! Soy Pixi
+            ¡Hola! Soy Pixibot
             <span class="caret-blink ml-1 inline-block h-[1.1em] w-[3px] translate-y-[3px] bg-accent-500" aria-hidden="true" />
           </p>
           <p class="mt-1 text-[13px] leading-relaxed text-ink-500">

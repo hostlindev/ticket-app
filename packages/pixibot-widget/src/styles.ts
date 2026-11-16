@@ -128,8 +128,21 @@ textarea:focus { outline: none; border-color: var(--pxb-accent-500); box-shadow:
 .file { display: none; }
 
 .privacy { margin: 0; padding: 8px 10px; font-size: 12px; color: var(--pxb-ink-soft); background: var(--pxb-bg); border-radius: 8px; }
-.error { margin: 0; padding: 10px 12px; font-size: 13px; font-weight: 700; color: #991b1b; background: #fee2e2; border: 2px solid #fca5a5; border-radius: 10px; animation: shake .35s ease both; }
+.error { margin: 0 16px 12px; padding: 10px 12px; flex: none; font-size: 13px; font-weight: 700; color: #991b1b; background: #fee2e2; border: 2px solid #fca5a5; border-radius: 10px; animation: shake .35s ease both; }
 .error[hidden] { display: none; }
+.ferr { margin: 6px 0 0; font-size: 12.5px; font-weight: 700; color: #b91c1c; animation: shake .35s ease both; }
+.ferr[hidden] { display: none; }
+textarea.invalid { border-color: #ef4444; box-shadow: 0 0 0 3px #fee2e2; }
+.types.invalid { padding: 6px; margin: -6px; border-radius: 12px; outline: 2px solid #fca5a5; background: #fff5f5; }
+.dialog { position: relative; }
+.sending { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; text-align: center; background: rgba(255,255,255,.93); animation: fade .2s ease both; }
+.sending[hidden] { display: none; }
+.sending b { font-size: 15px; font-weight: 800; }
+.sending-sub { font-size: 12.5px; color: var(--pxb-ink-soft); }
+.loader { position: relative; width: 84px; height: 84px; display: grid; place-items: center; margin-bottom: 4px; }
+.loader .ring { position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--pxb-accent-100); border-top-color: var(--pxb-accent-600); animation: spin .9s linear infinite; }
+.loader .bot { display: grid; place-items: center; animation: bob 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .loader .ring { animation-duration: 2s; } }
 
 .foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--pxb-line); background: var(--pxb-bg); }
 .btn { padding: 10px 16px; border-radius: 10px; font-weight: 800; border: 2px solid var(--pxb-ink); background: #fff; color: var(--pxb-ink); }
@@ -193,6 +206,7 @@ textarea:focus { outline: none; border-color: var(--pxb-accent-500); box-shadow:
 @keyframes beacon { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
 @keyframes blink-caret { 50% { opacity: 0; } }
 @keyframes shake { 20%,60% { transform: translateX(-5px); } 40%,80% { transform: translateX(5px); } }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 520px) {

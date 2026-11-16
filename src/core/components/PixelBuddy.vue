@@ -24,7 +24,7 @@ withDefaults(
     fill="none"
     shape-rendering="crispEdges"
     role="img"
-    aria-label="Pixi, robot de incidencias"
+    aria-label="Pixibot, robot de incidencias"
     class="pxb-robot"
     :class="bob ? 'is-alive' : 'is-idle'"
   >

@@ -11,7 +11,7 @@ const paletteList = Object.values(PALETTES)
 
 function selectPalette(id: PaletteId): void {
   paletteStore.applyPalette(id)
-  theme.global.name.value = `pixi-${id}`
+  theme.change(`pixi-${id}`)
 }
 </script>
 

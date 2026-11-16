@@ -47,11 +47,13 @@ const template = (size: number) => `
                   `<button type="button" class="type" role="radio" aria-checked="false" data-type="${t.id}"><span class="ic" aria-hidden="true">${t.icon}</span>${t.label}</button>`,
               ).join('')}
             </div>
+            <p class="ferr" data-for="type" role="alert" hidden></p>
           </div>
           <div class="field">
             <label for="pxb-desc">Cuéntame qué pasó</label>
             <textarea id="pxb-desc" maxlength="${MAX_CHARS}" placeholder="Ej.: Al guardar el formulario aparece un error y no avanza…"></textarea>
             <div class="meta"><span class="need"></span><span class="count">0/${MAX_CHARS}</span></div>
+            <p class="ferr" data-for="desc" role="alert" hidden></p>
           </div>
           <div class="field">
             <span class="lbl" id="pxb-img-l">Imagen <span class="opt">(opcional)</span></span>
@@ -69,13 +71,18 @@ const template = (size: number) => `
             </div>
           </div>
           <p class="privacy">Pixibot también enviará tu nombre, el navegador y la pantalla que usas para ayudar al equipo a resolverlo más rápido.</p>
-          <p class="error" role="alert" hidden></p>
         </div>
+        <p class="error" role="alert" hidden></p>
         <div class="foot">
           <button type="button" class="btn cancel">Cancelar</button>
           <button type="submit" class="btn primary"><span class="spinner" hidden></span><span class="label">Enviar reporte</span></button>
         </div>
       </form>
+      <div class="sending" hidden role="status" aria-live="polite">
+        <div class="loader"><span class="ring"></span><span class="bot">${robotSvg(44)}</span></div>
+        <b class="sending-title">Enviando tu reporte…</b>
+        <span class="sending-sub"></span>
+      </div>
       <div class="done" hidden>
         ${robotSvg(84)}
         <h3>¡Reporte enviado!</h3>
@@ -137,6 +144,11 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
   const spinner = $<HTMLElement>('.spinner')
   const label = $<HTMLElement>('.label')
   const sub = $<HTMLElement>('.sub')
+  const typesBox = $<HTMLElement>('.types')
+  const typeErr = $<HTMLElement>('.ferr[data-for=type]')
+  const descErr = $<HTMLElement>('.ferr[data-for=desc]')
+  const sending = $<HTMLElement>('.sending')
+  const sendingSub = $<HTMLElement>('.sending-sub')
 
   if (options.position === 'bottom-left') root.classList.add('left')
   if (options.accentColor) {
@@ -210,6 +222,36 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
       void errorBox.offsetWidth
       errorBox.style.animation = ''
     }
+  }
+
+  function setFieldError(el: HTMLElement, text: string | null, animate = true): void {
+    const wasShown = !el.hidden
+    el.hidden = !text
+    el.textContent = text ?? ''
+    if (text && animate && !wasShown) {
+      el.style.animation = 'none'
+      void el.offsetWidth
+      el.style.animation = ''
+    }
+  }
+
+  const descMessage = (): string | null =>
+    desc.value.trim().length < MIN_CHARS ? `Describe el problema con al menos ${MIN_CHARS} caracteres.` : null
+
+  /** Valida y muestra cada error junto a su campo; enfoca el primero inválido. */
+  function validate(): boolean {
+    const typeMsg = issueType ? null : 'Elige qué tipo de problema es.'
+    const descMsg = descMessage()
+    setFieldError(typeErr, typeMsg)
+    setFieldError(descErr, descMsg)
+    typesBox.classList.toggle('invalid', !!typeMsg)
+    desc.classList.toggle('invalid', !!descMsg)
+    const first = typeMsg ? (shadow.querySelector('.type') as HTMLElement) : descMsg ? desc : null
+    if (first) {
+      first.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      first.focus({ preventScroll: true })
+    }
+    return !first
   }
 
   function refreshCounter(): void {
@@ -293,6 +335,10 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
     setMode('none')
     refreshCounter()
     setError(null)
+    setFieldError(typeErr, null)
+    setFieldError(descErr, null)
+    typesBox.classList.remove('invalid')
+    desc.classList.remove('invalid')
   }
 
   /* ---------- Abrir / cerrar ---------- */
@@ -324,15 +370,20 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
     e.preventDefault()
     if (busy) return
     const user = currentUser()
-    if (!issueType) return setError('Elige qué tipo de problema es.')
-    if (desc.value.trim().length < MIN_CHARS) return setError(`Describe el problema con al menos ${MIN_CHARS} caracteres.`)
-    if (!user) return setError('No pudimos identificar tu sesión. Vuelve a iniciar sesión e inténtalo otra vez.')
+    if (!validate()) return
+    if (!user || !issueType) return setError('No pudimos identificar tu sesión. Vuelve a iniciar sesión e inténtalo otra vez.')
 
     setError(null)
     busy = true
     submitBtn.disabled = true
     spinner.hidden = false
     label.textContent = 'Enviando…'
+    sendingSub.textContent = imageBlob ? 'Subiendo la imagen adjunta, puede tardar unos segundos.' : 'Esto tomará solo un momento.'
+    sending.hidden = false
+    form.setAttribute('aria-busy', 'true')
+    const slowTimer = window.setTimeout(() => {
+      if (busy) sendingSub.textContent = 'Sigue en proceso, gracias por esperar…'
+    }, 6000)
     try {
       const result = await submitReport(options.apiUrl, options.endpoint ?? '/tickets', getToken(), {
         issueType,
@@ -359,6 +410,9 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
       )
       options.onError?.(error)
     } finally {
+      window.clearTimeout(slowTimer)
+      sending.hidden = true
+      form.removeAttribute('aria-busy')
       busy = false
       submitBtn.disabled = false
       spinner.hidden = true
@@ -387,6 +441,8 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
       issueType = b.dataset.type as IssueType
       shadow.querySelectorAll('.type').forEach((o) => o.setAttribute('aria-checked', String(o === b)))
       setError(null)
+      setFieldError(typeErr, null)
+      typesBox.classList.remove('invalid')
     }),
   )
   shadow.querySelectorAll<HTMLElement>('.mode').forEach((b) =>
@@ -401,7 +457,21 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
   fileInput.addEventListener('cancel', () => {
     if (!imageBlob) setMode('none')
   })
-  desc.addEventListener('input', refreshCounter)
+  desc.addEventListener('input', () => {
+    refreshCounter()
+    // Una vez mostrado el error, se actualiza en vivo hasta que se corrige.
+    if (!descErr.hidden) {
+      const m = descMessage()
+      setFieldError(descErr, m, false) // sin re-animar mientras escribe
+      desc.classList.toggle('invalid', !!m)
+    }
+  })
+  desc.addEventListener('blur', () => {
+    if (desc.value.length > 0 && descMessage()) {
+      setFieldError(descErr, descMessage())
+      desc.classList.add('invalid')
+    }
+  })
   form.addEventListener('submit', (e) => void onSubmit(e))
 
   document.body.append(host)

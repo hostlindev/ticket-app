@@ -9,7 +9,7 @@ const theme = useTheme()
 
 onMounted(() => {
   paletteStore.initPalette()
-  theme.global.name.value = `pixi-${paletteStore.current}`
+  theme.change(`pixi-${paletteStore.current}`)
 })
 </script>
 

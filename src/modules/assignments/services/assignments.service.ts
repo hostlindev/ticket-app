@@ -32,8 +32,8 @@ const assignments = new Map<string, string[]>([
   ['app-edupath', []],
 ])
 
-const SYSTEMS: Array<Omit<SystemAssignment, 'developers'>> = [
-  { id: 'app-nexaportal', name: 'NexaPortal Clientes', domain: 'clientes.nexa.io' },
+const SYSTEMS: Array<Omit<SystemAssignment, 'developers' | 'lead'>> = [
+  { id: 'app-nexaportal', name: 'NexaPortal Clientes', domain: 'clientes.nexa.io', leadId: 'usr_ada' },
   { id: 'app-kromashop', name: 'KromaShop B2B', domain: 'tienda.kroma.com' },
   { id: 'app-velocepay', name: 'VelocePay Checkout', domain: 'checkout.veloce.io' },
   { id: 'app-omnidesk', name: 'OmniDesk Soporte', domain: 'ayuda.omnidesk.com' },
@@ -47,8 +47,9 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function toSystem(base: Omit<SystemAssignment, 'developers'>): SystemAssignment {
-  return { ...base, developers: byId(assignments.get(base.id) ?? []) }
+function toSystem(base: Omit<SystemAssignment, 'developers' | 'lead'>): SystemAssignment {
+  const lead = byId(base.leadId ? [base.leadId] : [])[0] ?? null
+  return { ...base, lead, developers: byId(assignments.get(base.id) ?? []) }
 }
 
 /** Equivale a `GET /systems` (con sus desarrolladores asignados). */
@@ -109,6 +110,7 @@ export async function updateSystem(systemId: string, input: NewSystemInput): Pro
   base.name = input.name.trim()
   base.domain = domain
   base.description = input.description?.trim() || undefined
+  base.leadId = input.leadId
   return toSystem(base)
 }
 
@@ -129,8 +131,8 @@ export async function deleteSystem(systemId: string): Promise<void> {
 /** Equivale a `POST /systems`. */
 export async function createSystem(input: NewSystemInput): Promise<SystemAssignment> {
   if (!USE_MOCK) {
-    // El backend aún no expone `POST /systems`.
-    throw new Error('El registro de sistemas todavía no está disponible en la API.')
+    const { data: body } = await http.post<ApiResponse<SystemAssignment>>('/systems', input)
+    return body.data
   }
 
   await delay(400)
@@ -149,6 +151,7 @@ export async function createSystem(input: NewSystemInput): Promise<SystemAssignm
     name,
     domain,
     description: input.description?.trim() || undefined,
+    leadId: input.leadId,
   }
   SYSTEMS.push(base)
   assignments.set(base.id, [])
