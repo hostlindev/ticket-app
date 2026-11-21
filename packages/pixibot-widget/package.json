@@ -12,17 +12,22 @@
       "import": "./dist/pixibot.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "vite build && tsc -p tsconfig.json",
-    "dev": "vite build --watch"
+    "dev": "vite build --watch",
+    "test": "vitest run"
   },
   "dependencies": {
     "html2canvas-pro": "^1.5.11"
   },
   "devDependencies": {
+    "happy-dom": "^21.0.4",
     "typescript": "~6.0.0",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "vitest": "^5.1.1"
   }
 }

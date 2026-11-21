@@ -3,6 +3,7 @@ import { collectContext } from './collect'
 import { robotSvg } from './robot'
 import { css } from './styles'
 import { submitReport } from './submit'
+import { getTelemetrySnapshot, installMonitor } from './telemetry'
 import type { IssueType, PixibotHandle, PixibotOptions, PixibotUser } from './types'
 
 const ISSUE_TYPES: Array<{ id: IssueType; label: string; icon: string }> = [
@@ -108,7 +109,7 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
   let userOverride: PixibotUser | null | undefined
 
   const currentUser = () => (userOverride !== undefined ? userOverride : getUser())
-  const getToken = () => (typeof options.token === 'function' ? options.token() : (options.token ?? null))
+  const getApiKey = () => (typeof options.apiKey === 'function' ? options.apiKey() : (options.apiKey ?? null))
 
   const host = document.createElement('div')
   host.id = HOST_ID
@@ -385,18 +386,24 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
       if (busy) sendingSub.textContent = 'Sigue en proceso, gracias por esperar…'
     }, 6000)
     try {
-      const result = await submitReport(options.apiUrl, options.endpoint ?? '/tickets', getToken(), {
+      const result = await submitReport(options.apiUrl, options.endpoint ?? '/tickets', {
         issueType,
         description: desc.value.trim(),
         system: options.system,
         user,
         context: collectContext(),
         screenshot: imageBlob,
-      }, options.fetch)
-      const ticketId = (result as { data?: { id?: string } } | null)?.data?.id
-      shadow.querySelector('.done-msg')!.textContent = ticketId
-        ? `Tu reporte quedó registrado como ${ticketId}. El equipo ya fue notificado.`
-        : 'El equipo ya fue notificado y lo revisará pronto. ¡Gracias por avisar!'
+        telemetry: getTelemetrySnapshot(),
+      }, getApiKey(), options.fetch)
+      // Acepta la respuesta de `/v1/pixibot/tickets` (ticket_code, user_message) y la forma `{ data: { id } }`.
+      const r = result as { ticket_code?: string; user_message?: string; is_duplicate?: boolean; already_resolved?: boolean; data?: { id?: string } } | null
+      const ticketId = r?.ticket_code ?? r?.data?.id
+      shadow.querySelector('.done-msg')!.textContent =
+        r?.already_resolved || r?.is_duplicate
+          ? (r.user_message ?? 'El equipo ya está atendiendo este problema.')
+          : ticketId
+            ? `Tu reporte quedó registrado como ${ticketId}. El equipo ya fue notificado.`
+            : (r?.user_message ?? 'El equipo ya fue notificado y lo revisará pronto. ¡Gracias por avisar!')
       form.hidden = true
       done.hidden = false
       ;(shadow.querySelector('.done-close') as HTMLElement).focus()
@@ -475,6 +482,10 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
   form.addEventListener('submit', (e) => void onSubmit(e))
 
   document.body.append(host)
+  const uninstallMonitor = installMonitor(options, currentUser, HOST_ID)
+  if (options.monitor) {
+    $('.privacy').textContent += ' Si el sistema falla, Pixibot avisará al equipo automáticamente.'
+  }
   refreshCounter()
   hint.textContent = HINTS.none
   // El saludo aparece poco después de que el robot "entra" a la pantalla.
@@ -500,6 +511,7 @@ export function mountPixibot(options: PixibotOptions): PixibotHandle {
       window.clearTimeout(greetTimer)
       window.clearTimeout(bubbleTimer)
       window.clearInterval(typingTimer)
+      uninstallMonitor()
       clearImage()
       host.remove()
     },

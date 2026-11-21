@@ -1,7 +1,11 @@
 import { mountPixibot } from './widget'
 import type { PixibotHandle, PixibotOptions } from './types'
 
-export type { PixibotOptions, PixibotUser, PixibotHandle, IssueType, ClientContext } from './types'
+export type {
+  PixibotOptions, PixibotUser, PixibotHandle, IssueType, ClientContext,
+  PixibotMonitorOptions, TelemetrySnapshot, AutoIncident,
+} from './types'
+export { captureError, attachVue, getTelemetrySnapshot } from './telemetry'
 export { collectContext, detectBrowser } from './collect'
 
 let instance: PixibotHandle | null = null

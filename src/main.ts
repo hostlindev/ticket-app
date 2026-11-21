@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { attachVue } from '@pixi/pixibot-widget'
 
 import '@fontsource/nunito/400.css'
 import '@fontsource/nunito/600.css'
@@ -20,5 +21,7 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(vuetify)
 app.use(router)
+
+attachVue(app) // captura errores de componentes Vue para Pixibot
 
 app.mount('#app')

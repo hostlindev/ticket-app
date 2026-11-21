@@ -2,7 +2,6 @@ import { onBeforeUnmount, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { destroyPixibot, initPixibot, resetPixibotGreeting } from '@pixi/pixibot-widget'
 import { USE_MOCK } from '@core/api/config'
-import { getAccessToken } from '@core/api/token'
 import { brand } from '@core/config/brand'
 import { useAuthStore } from '@modules/auth/store/auth.store'
 
@@ -36,7 +35,10 @@ export function usePixibot(): void {
           const u = user.value
           return u ? { id: u.id, name: u.name, email: u.email } : null
         },
-        token: getAccessToken,
+        // Endpoint de ingesta de Pixibot en ticket-api (autenticado con X-System-Key).
+        endpoint: '/v1/pixibot/tickets',
+        apiKey: import.meta.env.VITE_PIXIBOT_KEY || null,
+        monitor: !USE_MOCK && !!import.meta.env.VITE_PIXIBOT_KEY,
         fetch: USE_MOCK ? mockFetch : undefined,
       })
     },

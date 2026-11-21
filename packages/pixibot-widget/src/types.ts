@@ -14,8 +14,6 @@ export interface PixibotOptions {
   system: string
   /** Usuario logueado. Puede ser una función si cambia durante la sesión. */
   user: PixibotUser | (() => PixibotUser | null)
-  /** Token Bearer (o función que lo entregue). Opcional. */
-  token?: string | null | (() => string | null)
   /** Ruta del endpoint que recibe el reporte. Por defecto `/tickets`. */
   endpoint?: string
   /** Dónde se ancla el botón. Por defecto `bottom-right`. */
@@ -24,6 +22,12 @@ export interface PixibotOptions {
   accentColor?: string
   /** Peso máximo (KB) de la imagen una vez comprimida. Por defecto 800. */
   maxImageKB?: number
+  /** API key del sistema; se envía como `X-System-Key` en reportes manuales y automáticos. */
+  apiKey?: string | null | (() => string | null)
+  /** Versión de la app anfitriona (se adjunta a los incidentes automáticos). */
+  appVersion?: string
+  /** Monitoreo automático (5xx, ORA-, errores JS). Apagado si se omite. */
+  monitor?: boolean | PixibotMonitorOptions
   /** `fetch` alternativo (pruebas o mocks). Por defecto el global. */
   fetch?: typeof fetch
   /** Se llama tras enviar con éxito. */
@@ -51,4 +55,41 @@ export interface PixibotHandle {
   destroy(): void
   /** Actualiza el usuario (útil tras login/logout en una SPA). */
   setUser(user: PixibotUser | null): void
+}
+
+export interface PixibotMonitorOptions {
+  /** Ruta (relativa a `apiUrl`) que recibe incidentes automáticos. */
+  endpoint?: string
+  /** Detectar HTTP 5xx (fetch + XHR). Por defecto true. */
+  network?: boolean
+  /** Detectar códigos ORA- en cuerpos de respuesta. Por defecto true. */
+  oracle?: boolean
+  /** Buscar ORA- también en respuestas 2xx/3xx. Por defecto true. */
+  scanSuccessBodies?: boolean
+  /** Capturar window.error / unhandledrejection. Por defecto true. */
+  frontend?: boolean
+  /** Tiempo sin reenviar la misma firma. Por defecto 300000 (5 min). */
+  cooldownMs?: number
+  /** Tope global de envíos por minuto. Por defecto 10. */
+  maxPerMinute?: number
+  /** URLs que nunca se monitorean (además de `apiUrl`). */
+  ignoreUrls?: Array<string | RegExp>
+}
+
+export type AutoErrorType = 'http_5xx' | 'oracle_error' | 'frontend_error'
+
+export interface AutoIncident {
+  error_type: AutoErrorType
+  code: string
+  error_message: string
+  module_route: string
+  telemetry: Record<string, unknown>
+}
+
+export interface TelemetrySnapshot {
+  http_status: number | null
+  failed_endpoint: string | null
+  ora_code: string | null
+  js_error: string | null
+  last_ui_action: string
 }
